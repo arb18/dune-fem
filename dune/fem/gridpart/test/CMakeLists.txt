@@ -23,3 +23,7 @@ foreach( gp ${GRIDPARTS} )
   COMPILE_DEFINITIONS "${GRIDTYPE};GRIDDIM=${GRIDDIM};COUNT_FLOPS"
   LINK_LIBRARIES dunefem )
 endforeach()
+
+dune_add_test( NAME test_gridpart2gridview SOURCES test-gridpart2gridview.cc
+COMPILE_DEFINITIONS "${GRIDTYPE};GRIDDIM=${GRIDDIM};COUNT_FLOPS"
+LINK_LIBRARIES dunefem )
