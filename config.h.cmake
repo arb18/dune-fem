@@ -16,6 +16,9 @@
 /* Define if we have name for endian header (including brackets) */
 #cmakedefine SYSTEM_ENDIAN_HEADER "${SYSTEM_ENDIAN_HEADER}"
 
+/* Define if we have xdr.h */
+#cmakedefine HAVE_XDR 1
+
 /* Define actual name of xdr_uint_64_t method */
 #cmakedefine XDR_UINT64_FUNC ${XDR_UINT64_FUNC}
 

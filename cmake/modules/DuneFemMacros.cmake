@@ -92,6 +92,9 @@ endif()
 
 # check for XDR (deprecated)
 find_package(XDR)
+if(XDR_FOUND)
+  set(HAVE_XDR 1)
+endif()
 
 ####### abbreviations
 include(FemShort)
