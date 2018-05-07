@@ -28,7 +28,18 @@ namespace Dune
     : FieldTraits<FieldVector<T, N> >
   {};
 
+  template<typename T, int N, int M>
+  struct IsFieldVectorSizeCorrect<Fem::ExplicitFieldVector<T, N>, M>
+    : IsFieldVectorSizeCorrect<FieldVector<T, N>, M>
+  {};
+
   namespace Fem {
+
+    /**std::true_type for containers containing field elements.*/
+    template<class T>
+    struct IsFieldType
+      : std::is_same<typename FieldTraits<T>::field_type, T>
+    {};
 
     /**Accept implicit type conversion from any DenseVector to a field
      * vector only if both vectors contain field elements of some type
@@ -39,18 +50,22 @@ namespace Dune
      * This inhibits the initialization of a FieldVector of complex
      * objects like matrices from a field vector of scalars.
      */
-    template<class C, class T>
+    template<class C, class T, class SFINAE = void>
     struct AcceptElementImplicitConstruction
-    {
-      static constexpr bool value =
-        (std::is_same<typename FieldTraits<typename DenseMatVecTraits<C>::value_type>::field_type,
-         typename DenseMatVecTraits<C>::value_type
-         >::value
-         ==
-         std::is_same<typename FieldTraits<T>::field_type, T>::value)
-        &&
-        std::is_convertible<typename DenseMatVecTraits<C>::value_type, T>::value;
-    };
+      : IsFieldType<C>
+    {};
+
+    template<class C, class T>
+    struct AcceptElementImplicitConstruction<
+      C, T,
+      std::enable_if_t<((IsFieldType<typename DenseMatVecTraits<C>::value_type>::value
+                         ==
+                         IsFieldType<T>::value)
+                        ||
+                        std::is_convertible<typename DenseMatVecTraits<C>::value_type, T>::value
+        )> >
+      : std::true_type
+    {};
 
     template<class T, int N>
     class ExplicitFieldVector
@@ -58,8 +73,10 @@ namespace Dune
     {
       typedef Dune::FieldVector<T, N> BaseType;
      public:
-      //! Inherit assignment
-      using BaseType::operator=;
+      //! Constructor making default-initialized vector
+      constexpr ExplicitFieldVector()
+        : BaseType()
+      {}
 
       /**Redirect any general construction to the base class during
        * explicit conversion
@@ -67,7 +84,7 @@ namespace Dune
       template<class... V>
       explicit ExplicitFieldVector(const V&... args) : BaseType(args...) {}
 
-      /**Allow implicit conversion if bothe vector are either
+      /**Allow implicit conversion if both vectors are either
        * composed of field-elements of some fields which can be
        * converted into each other or if both vectors are composed of
        * more complicated elements (which can be converted into each
@@ -85,6 +102,46 @@ namespace Dune
                           >::type* dummy=0 )
         : BaseType(x)
       {}
+
+      //! Assignment operator for scalar
+      template<typename C,
+               typename EnableIf = typename std::enable_if<
+                 N == 1 &&
+                 std::is_convertible<C, T>::value &&
+                 ! std::is_same<T, DenseVector<typename FieldTraits<C>::field_type>
+                                >::value
+                 >::type
+               >
+      ExplicitFieldVector& operator=(const C& c)
+      {
+        (*this)[0] = c;
+        return *this;
+      }
+
+      //! Inherit assignment
+      // using BaseType::operator=; <- give ambiguous overloads
+      using DenseVector<FieldVector<T, N> >::operator=;
+
+      //! copy assignment operator
+      ExplicitFieldVector& operator=(const ExplicitFieldVector& other)
+      {
+        static_cast<BaseType&>(*this) = static_cast<const BaseType&>(other);
+        return *this;
+      }
+
+      template <typename C, int M>
+      ExplicitFieldVector& operator=(const FieldVector<C, M>& other)
+      {
+        static_cast<BaseType&>(*this) = other;
+        return *this;
+      }
+
+      template <typename C, int M>
+      ExplicitFieldVector& operator=(const ExplicitFieldVector<C, M>& other)
+      {
+        static_cast<BaseType&>(*this) = other;
+        return *this;
+      }
 
     };
 
