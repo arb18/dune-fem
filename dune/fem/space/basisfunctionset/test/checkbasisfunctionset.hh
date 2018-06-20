@@ -37,7 +37,7 @@ namespace Dune
       static const int dimRange = FunctionSpaceType::dimRange;
 
       const EntityType &entity = basisFunctionSet.entity();
-      const ReferenceElementType &refElement = basisFunctionSet.referenceElement();
+      const auto refElement = basisFunctionSet.referenceElement();
 
       if( entity.type() != refElement.type() )
         DUNE_THROW( Dune::InvalidStateException, "GeometryType of referenceElement and entity mismatch for this basisFunctionSet" );
@@ -76,13 +76,19 @@ namespace Dune
       Dune::FieldVector< RangeFieldType, 7 > ret;
 
       const std::size_t nop = quadrature.nop();
+
+      std::vector< RangeType > aVec( nop );
+      std::vector< JacobianRangeType > aJac( nop );
+
+      basisFunctionSet.evaluateAll( quadrature, dofs, aVec );
+      basisFunctionSet.jacobianAll( quadrature, dofs, aJac );
+
       for( std::size_t qp = 0; qp < nop; ++qp )
       {
         // check evaluate methods
         {
-          RangeType a, b;
-
-          basisFunctionSet.evaluateAll( quadrature[ qp ], dofs, a );
+          RangeType  b;
+          RangeType a = aVec[ qp ];
 
           std::vector< RangeType > values( basisFunctionSet.size() );
           basisFunctionSet.evaluateAll( quadrature[ qp ], values );
@@ -94,9 +100,8 @@ namespace Dune
 
         // check jacobian methods
         {
-          JacobianRangeType a, b;
-
-          basisFunctionSet.jacobianAll( quadrature[ qp ], dofs, a );
+          JacobianRangeType b;
+          JacobianRangeType a = aJac[ qp ];
 
           std::vector< JacobianRangeType > values( basisFunctionSet.size() );
           basisFunctionSet.jacobianAll( quadrature[ qp ], values );
