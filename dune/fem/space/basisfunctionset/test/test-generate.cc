@@ -29,7 +29,6 @@ void generateCode ( GridPartType &gridPart )
 {
   static const int dimDomain = GridPartType::dimensionworld;
 
-  typedef typename GridPartType :: GridType  GridType;
   typedef Dune::Fem::FunctionSpace< typename GridPartType::ctype, double, dimDomain, 1 > ScalarFunctionSpaceType;
 
   std::vector< int > elemQuadOrds = {{ 1, 2, 3, 4 }};

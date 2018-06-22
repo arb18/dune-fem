@@ -44,7 +44,7 @@ void traverse ( GridPartType &gridPart )
   QuadratureType quadrature( entity, polorder );
 
   // needs a geometry type to construct
-  //typedef Dune::Fem::LagrangeShapeFunctionSet< ScalarFunctionSpaceType, polorder > ScalarLagrangeShapeFunctionSetType;
+  typedef Dune::Fem::LagrangeShapeFunctionSet< ScalarFunctionSpaceType, polorder > ScalarLagrangeShapeFunctionSetType;
 
   // needs an order to construct
   typedef Dune::Fem::LegendreShapeFunctionSet< ScalarFunctionSpaceType > ScalarLegendreShapeFunctionSetType;
@@ -56,14 +56,13 @@ void traverse ( GridPartType &gridPart )
   typedef Dune::FieldVector< double, 7 > ErrorType;
 
   // prepare shapefunctions
-  //ScalarLagrangeShapeFunctionSetType scalarLagrangeShapeFunctionSet( entity.type() );
+  ScalarLagrangeShapeFunctionSetType scalarLagrangeShapeFunctionSet( entity.type() );
   ScalarLegendreShapeFunctionSetType scalarLegendreShapeFunctionSet( polorder );
   ScalarOrthonormalShapeFunctionSetType scalarOrthonormalShapeFunctionSet( entity.type(), polorder );
 
   double eps = 1e-7;
 
   ErrorType error( 0 );
-  /*
   // default basis function set
   Dune::Fem::DefaultBasisFunctionSet< EntityType, ScalarLagrangeShapeFunctionSetType >
   basisSet1( entity, scalarLagrangeShapeFunctionSet );
@@ -73,7 +72,6 @@ void traverse ( GridPartType &gridPart )
     std::cerr<<"set1: Errors( evaluate, jacobian, hessian, value axpy, jacobian axpy, hessian axpy, v+j axpy): "<< error <<std::endl;
     DUNE_THROW( Dune::InvalidStateException, " DefaultBasisFunctionSet< LagrangeShapeFunctionSet > test failed." );
   }
-  */
 
   error = 0;
   Dune::Fem::DefaultBasisFunctionSet< EntityType, ScalarLegendreShapeFunctionSetType >
