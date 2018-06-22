@@ -6,10 +6,6 @@
 #define USE_BASEFUNCTIONSET_OPTIMIZED
 #endif
 
-#ifdef USE_BASEFUNCTIONSET_OPTIMIZED
-#define USE_BASEFUNCTIONSET_CODEGEN
-#endif
-
 // C++ includes
 #include <cassert>
 #include <cstddef>
@@ -82,7 +78,6 @@ namespace Dune
       typedef typename EntityType::Geometry Geometry ;
 
       typedef typename GeometryType::ctype ctype;
-
     public:
       //  slight misuse of struct ToLocalFunctionSpace!!!
       //! \brief type of function space
@@ -103,14 +98,13 @@ namespace Dune
       typedef typename ScalarFunctionSpaceType::JacobianRangeType ScalarJacobianRangeType;
 
       //! \brief type of reference element
-      typedef Dune::ReferenceElement< ctype, GeometryType::coorddimension > ReferenceElementType;
-
-      enum { dimDomain = FunctionSpaceType::dimDomain };
-      enum { dimRange  = FunctionSpaceType::dimRange  };
+      typedef std::decay_t< decltype( Dune::ReferenceElements< ctype, GeometryType::coorddimension >::general( std::declval< const Dune::GeometryType & >() ) ) > ReferenceElementType;
 
       typedef std::vector< ScalarRangeType >          RangeVectorType;
       typedef std::vector< ScalarJacobianRangeType >  JacobianRangeVectorType;
 
+      enum { dimDomain = FunctionSpaceType::dimDomain };
+      enum { dimRange  = FunctionSpaceType::dimRange  };
 #ifdef USE_BASEFUNCTIONSET_OPTIMIZED
 #include "evaluatecaller_spec.hh"
 #endif

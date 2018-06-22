@@ -29,7 +29,6 @@ namespace Dune
       typedef typename BasisFunctionSet::RangeType RangeType;
       typedef typename BasisFunctionSet::JacobianRangeType JacobianRangeType;
       typedef typename BasisFunctionSet::HessianRangeType HessianRangeType;
-      typedef typename BasisFunctionSet::ReferenceElementType ReferenceElementType;
       typedef typename BasisFunctionSet::EntityType EntityType;
 
       typedef typename FunctionSpaceType::RangeFieldType RangeFieldType;
@@ -88,7 +87,7 @@ namespace Dune
         // check evaluate methods
         {
           RangeType  b;
-          RangeType a = aVec[ qp ];
+          RangeType& a = aVec[ qp ];
 
           std::vector< RangeType > values( basisFunctionSet.size() );
           basisFunctionSet.evaluateAll( quadrature[ qp ], values );
@@ -101,7 +100,7 @@ namespace Dune
         // check jacobian methods
         {
           JacobianRangeType b;
-          JacobianRangeType a = aJac[ qp ];
+          JacobianRangeType& a = aJac[ qp ];
 
           std::vector< JacobianRangeType > values( basisFunctionSet.size() );
           basisFunctionSet.jacobianAll( quadrature[ qp ], values );
