@@ -408,12 +408,15 @@ namespace Dune
       void hessianQuadrature( const QuadratureType &quad, Vectors& ... vec ) const
       {
         // make sure vec size if large enough
-        assert( vec.size() >= quad.nop() );
+        static_assert( sizeof...( Vectors ) > 0, "evaluateQuadrature needs to be called with at least one vector." );
+        //std::ignore =
+        //  std::make_tuple( ( evaluateQuadrature( quad, vec, typename std::decay< decltype( vec[ 0 ] ) >::type() ), 1 )
+        //    ... );
         // TODO: implement more efficient version via codegen
-        for( const auto& qp : quad )
-        {
-          hessian( qp, vec[ qp.index() ] );
-        }
+        //for( const auto& qp : quad )
+        // {
+        //  hessian( qp, vec[ qp.index() ] );
+        //}
       }
 
       /** \brief return const reference to local Dof Vector  */
