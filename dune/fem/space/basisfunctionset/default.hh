@@ -1,6 +1,8 @@
 #ifndef DUNE_FEM_BASISFUNCTIONSET_DEFAULT_HH
 #define DUNE_FEM_BASISFUNCTIONSET_DEFAULT_HH
 
+#warning "Standard BasisFunctionSet is used"
+
 // C++ includes
 #include <cassert>
 #include <cstddef>
