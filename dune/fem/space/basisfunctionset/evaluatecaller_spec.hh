@@ -18,7 +18,7 @@ struct EvaluateRanges
   {
     std::cerr << "ERROR: wrong code generated for VectorialBaseFunctionSet::evaluateRanges< "
               << dimRange << " , " << numRows << " , " << numCols << " >!" << std::endl;
-    abort();
+    std::abort();
   }
 };
 
@@ -39,7 +39,7 @@ struct EvaluateRanges<BaseFunctionSet, Fem :: EmptyGeometry, dimRange, numRows, 
 #else
     std::cerr << "ERROR: wrong code generated for VectorialBaseFunctionSet::evaluateRanges< "
               << "EmptyGeo, " << dimRange << " , " << numRows << " , " << numCols << " >!" << std::endl;
-    abort();
+    std::abort();
 #endif
   }
 };
@@ -65,7 +65,7 @@ struct EvaluateJacobians
   {
     std::cerr << "ERROR: wrong code generated for VectorialBaseFunctionSet::evaluateJacobians< "
               << dimRange << " , " << numRows << " , " << numCols << " >!" << std::endl;
-    abort();
+    std::abort();
   }
 };
 
@@ -85,7 +85,7 @@ struct EvaluateJacobians< BaseFunctionSet, Fem :: EmptyGeometry, dimRange, numRo
   {
     std::cerr << "ERROR: wrong code generated for VectorialBaseFunctionSet::evaluateJacobians< "
               << "EmptyGeo, " << dimRange << " , " << numRows << " , " << numCols << " >!" << std::endl;
-    abort();
+    std::abort();
   }
 };
 
@@ -109,7 +109,7 @@ struct AxpyRanges
   {
     std::cerr << "ERROR: wrong code generated for VectorialBaseFunctionSet::axpyRanges <"
               << dimRange << " , " << numRows << " , " << numCols << " >!" << std::endl;
-    abort();
+    std::abort();
   }
 };
 
@@ -128,7 +128,7 @@ struct AxpyRanges<BaseFunctionSet, Fem :: EmptyGeometry, dimRange, numRows, numC
   {
     std::cerr << "ERROR: wrong code generated for VectorialBaseFunctionSet::axpyRanges <"
               << dimRange << " , " << numRows << " , " << numCols << " >!" << std::endl;
-    abort();
+    std::abort();
   }
 };
 
