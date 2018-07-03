@@ -5,11 +5,15 @@
 #error "<dune/fem/space/basisfunctionset/default.hh> included before codegen version"
 #endif
 
+
+#define USE_BASEFUNCTIONSET_CODEGEN
+
 // define header guard for DefaultBasisFunctionSet to avoid errors because both
 // classes have the same name
 #define DUNE_FEM_BASISFUNCTIONSET_DEFAULT_HH
 
 #ifndef USE_BASEFUNCTIONSET_CODEGEN
+#warning "Using Optimized Code"
 #define USE_BASEFUNCTIONSET_CODEGEN
 #endif
 
@@ -305,6 +309,7 @@ namespace Dune
                 JacobianArray, DofVector, Geometry >  Traits;
         typedef Fem :: EvaluateCallerInterface< Traits > BaseEvaluationType;
 
+        std::cout << "Getting combination " << quad.nop() << " " << size()/dimRange << std::endl;
         // get base function evaluate caller (calls axpyRanges)
         const BaseEvaluationType& baseEval =
           BaseEvaluationType::storage( *this, jacobianCache( quad ), quad );
@@ -409,6 +414,7 @@ namespace Dune
         const BaseEvaluationType& baseEval =
           BaseEvaluationType::storage( *this, rangeCache( quad ), quad );
 
+        std::cout << "Getting combination " << quad.nop() << " " << size()/dimRange << std::endl;
         // call appropriate axpyRanges method
         baseEval.axpyRanges( quad, rangeFactors, dofs );
 #else
@@ -444,6 +450,7 @@ namespace Dune
         const BaseEvaluationType& baseEval =
           BaseEvaluationType::storage( *this, jacobianCache( quad ), quad );
 
+        std::cout << "Getting combination " << quad.nop() << " " << size()/dimRange << std::endl;
         // call appropriate axpyRanges method
         baseEval.axpyJacobians( quad, geometry(), jacobianFactors, dofs );
 #else
