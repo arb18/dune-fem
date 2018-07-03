@@ -1072,7 +1072,9 @@ namespace Dune
       std::set< int > quadNops;
       for( const auto& entity : space )
       {
-        sizes.insert( space.basisFunctionSet( entity ).size() );
+        // only use size of scalar basis function set, i.e. dimRange = 1
+        const int scalarSize = space.basisFunctionSet( entity ).size() / dimRange ;
+        sizes.insert( scalarSize );
 
         const auto iend = space.gridPart().iend( entity );
         for( auto it = space.gridPart().ibegin( entity ); it != iend; ++it )

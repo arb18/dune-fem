@@ -6,15 +6,19 @@
 #endif
 
 
+#ifndef BASEFUNCTIONSET_CODEGEN_GENERATE
 #define USE_BASEFUNCTIONSET_CODEGEN
+#endif
 
 // define header guard for DefaultBasisFunctionSet to avoid errors because both
 // classes have the same name
 #define DUNE_FEM_BASISFUNCTIONSET_DEFAULT_HH
 
+#ifndef BASEFUNCTIONSET_CODEGEN_GENERATE
 #ifndef USE_BASEFUNCTIONSET_CODEGEN
 #warning "Using Optimized Code"
 #define USE_BASEFUNCTIONSET_CODEGEN
+#endif
 #endif
 
 #ifdef USE_BASEFUNCTIONSET_CODEGEN
@@ -260,7 +264,6 @@ namespace Dune
         const BaseEvaluationType& baseEval =
             BaseEvaluationType::storage( *this, rangeCache( quad ), quad );
 
-        std::cout << "Getting combination " << quad.nop() << " " << size()/dimRange << std::endl;
         baseEval.evaluateRanges( quad, dofs, ranges );
 #else
 
@@ -309,7 +312,6 @@ namespace Dune
                 JacobianArray, DofVector, Geometry >  Traits;
         typedef Fem :: EvaluateCallerInterface< Traits > BaseEvaluationType;
 
-        std::cout << "Getting combination " << quad.nop() << " " << size()/dimRange << std::endl;
         // get base function evaluate caller (calls axpyRanges)
         const BaseEvaluationType& baseEval =
           BaseEvaluationType::storage( *this, jacobianCache( quad ), quad );
@@ -404,8 +406,6 @@ namespace Dune
         startPrefetch();
 
 #ifdef USE_BASEFUNCTIONSET_OPTIMIZED
-        std::cout << "Optimized axpyRanges" << std::endl;
-
         typedef Fem :: EvaluateCallerInterfaceTraits<
             QuadratureType, RangeArray, DofVector > Traits;
         typedef Fem :: EvaluateCallerInterface< Traits > BaseEvaluationType;
@@ -414,7 +414,6 @@ namespace Dune
         const BaseEvaluationType& baseEval =
           BaseEvaluationType::storage( *this, rangeCache( quad ), quad );
 
-        std::cout << "Getting combination " << quad.nop() << " " << size()/dimRange << std::endl;
         // call appropriate axpyRanges method
         baseEval.axpyRanges( quad, rangeFactors, dofs );
 #else
@@ -441,7 +440,6 @@ namespace Dune
         startPrefetch();
 
 #ifdef USE_BASEFUNCTIONSET_OPTIMIZED
-        std::cout << "Optimized axpyJacobian" << std::endl;
         typedef Fem :: EvaluateCallerInterfaceTraits< QuadratureType,
                 JacobianArray, DofVector, Geometry >  Traits;
         typedef Fem :: EvaluateCallerInterface< Traits > BaseEvaluationType;
@@ -450,7 +448,6 @@ namespace Dune
         const BaseEvaluationType& baseEval =
           BaseEvaluationType::storage( *this, jacobianCache( quad ), quad );
 
-        std::cout << "Getting combination " << quad.nop() << " " << size()/dimRange << std::endl;
         // call appropriate axpyRanges method
         baseEval.axpyJacobians( quad, geometry(), jacobianFactors, dofs );
 #else
