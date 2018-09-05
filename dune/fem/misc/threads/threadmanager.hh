@@ -36,6 +36,9 @@ namespace Dune
 #ifdef _OPENMP
     struct ThreadManager
     {
+      //! true if pthreads are used
+      static constexpr bool pthreads = false ;
+
       /** return maximal number of threads possbile in the current run
           \note can be set by the OMP_NUM_THREADS environment variable
                 from outside of the code */
@@ -79,6 +82,9 @@ namespace Dune
 
     struct ThreadManager
     {
+      //! true if pthreads are used
+      static constexpr bool pthreads = true ;
+
     private:
       struct Manager
       {
@@ -201,6 +207,9 @@ namespace Dune
      */
     struct ThreadManager
     {
+      //! true if pthreads are used
+      static constexpr bool pthreads = false ;
+
       //! \brief return maximal number of threads possbile in the current run
       static inline int maxThreads() { return 1;  }
 
