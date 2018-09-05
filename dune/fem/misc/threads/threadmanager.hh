@@ -4,18 +4,20 @@
 #include <cassert>
 #include <cstdlib>
 
-#if USE_PTHREADS && HAVE_PTHREAD == 0
+#ifdef USE_PTHREADS
+#if HAVE_PTHREAD == 0
 #warning "pthreads were not found!"
 #undef USE_PTHREADS
 #endif
+#endif
 
-#if defined _OPENMP || USE_PTHREADS == 1
+#if defined _OPENMP || defined(USE_PTHREADS)
 #ifndef USE_SMP_PARALLEL
 #define USE_SMP_PARALLEL
 #endif
 #endif
 
-#if USE_PTHREADS
+#ifdef USE_PTHREADS
 #include <pthread.h>
 #endif
 
@@ -72,7 +74,7 @@ namespace Dune
         return currentThreads() == 1 ;
       }
     }; // end class ThreadManager
-#elif USE_PTHREADS
+#elif defined(USE_PTHREADS)
 #warning "ThreadManager: using pthreads"
 
     struct ThreadManager
@@ -117,7 +119,7 @@ namespace Dune
         int activeThreads_;
 
         Manager()
-          : threadNum_( -1 ), maxThreads_( 1 ), activeThreads_( 1 )
+          : threadNum_( 0 ), maxThreads_( 1 ), activeThreads_( 1 )
         {}
       };
 
