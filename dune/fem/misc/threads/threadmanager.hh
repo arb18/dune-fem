@@ -87,11 +87,16 @@ namespace Dune
           static thread_local Manager mg ;
           return mg ;
         }
+        DUNE_EXPORT int &maxThreads_()
+        {
+          static int maxThreads = 1;
+          return maxThreads;
+        }
 
         inline void initThread( const int maxThreads, const int threadNum )
         {
           // thread number 0 is reserved for the master thread
-          maxThreads_ = maxThreads;
+          maxThreads_() = maxThreads;
           threadNum_  = threadNum ;
         }
 
@@ -105,7 +110,7 @@ namespace Dune
           activeThreads_ = nThreads;
         }
 
-        inline int maxThreads() const { return maxThreads_; }
+        inline int maxThreads() { return maxThreads_(); }
         inline int currentThreads() const { return activeThreads_; }
         inline int thread()
         {
@@ -115,11 +120,10 @@ namespace Dune
 
       private:
         int threadNum_;
-        int maxThreads_;
         int activeThreads_;
 
         Manager()
-          : threadNum_( 0 ), maxThreads_( 1 ), activeThreads_( 1 )
+          : threadNum_( 0 ), activeThreads_( 1 )
         {}
       };
 
