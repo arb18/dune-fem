@@ -31,10 +31,30 @@ namespace Dune
         return instance;
       }
 
+      static bool mpiFinalized ()
+      {
+        bool finalized = false ;
+#if HAVE_MPI
+        // check that MPI was not already finalized
+        {
+          int wasFinalized = -1;
+          MPI_Finalized( &wasFinalized );
+          finalized = bool( wasFinalized );
+        }
+#endif // #if HAVE_MPI
+        return finalized ;
+      }
+
 #if HAVE_PETSC
       struct PETSc
       {
-        ~PETSc() { ::Dune::Petsc::finalize(); }
+        ~PETSc()
+        {
+          if( ! mpiFinalized() )
+          {
+            ::Dune::Petsc::finalize();
+          }
+        }
 
         DUNE_EXPORT static void initialize( const bool verbose, int &argc, char **&argv )
         {
@@ -112,14 +132,6 @@ namespace Dune
 
       static int rank ()
       {
-        int wasFinalized = -1;
-        MPI_Finalized( &wasFinalized );
-        if( wasFinalized)
-        {
-          assert(false);
-          std::abort();
-        }
-
         return comm().rank();
       }
 
