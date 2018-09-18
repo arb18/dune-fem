@@ -12,8 +12,6 @@
 
 // dune-geometry includes
 #include <dune/geometry/type.hh>
-#include <dune/geometry/referenceelements.hh>
-#include <dune/geometry/quadraturerules.hh>
 
 // dune-fem includes
 #include <dune/fem/space/basisfunctionset/piolatransformation.hh>
@@ -243,7 +241,7 @@ namespace Dune
       using LocalInterpolationBasisType = Impl::RaviartThomasLocalInterpolationBasis< LocalFiniteElementType >;
 
       using Geometry = typename EntityType::Geometry;
-      using ReferenceElementType = Dune::Geo::ReferenceElement< Geometry >;
+      using ReferenceElementType = ReferenceElement< Geometry >;
 
       using TransformationType = PiolaTransformation< Geometry, dimRange >;
       using InverseTransformationType = typename TransformationType::InverseTransformationType;
@@ -251,8 +249,8 @@ namespace Dune
       using RangeType = typename LocalInterpolationBasisType::RangeType;
       using RangeFieldType = typename LocalInterpolationBasisType::RangeFieldType;
 
-      using VolumeQuadratures = Dune::QuadratureRules< typename Geometry::ctype, ReferenceElementType::dimension >;
-      using FaceQuadratures = Dune::QuadratureRules< RangeFieldType, ReferenceElementType::dimension-1 >;
+      using VolumeQuadratures = QuadratureRules< typename Geometry::ctype, ReferenceElementType::dimension >;
+      using FaceQuadratures = QuadratureRules< RangeFieldType, ReferenceElementType::dimension-1 >;
 
     public:
       explicit RaviartThomasLocalInterpolation ( const EntityType& entity )
