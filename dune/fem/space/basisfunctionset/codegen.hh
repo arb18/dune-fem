@@ -302,6 +302,7 @@ namespace Dune
         const char* codegenPreCompVar = "CODEGEN_COMPILE_INNERLOOPS";
         if( stage == -1 )
         {
+          out << "#ifndef HEADERCHECK" << std::endl;
           out << "#if ! " << codegenPreCompVar << std::endl;
         }
         else if( stage == 0 )
@@ -321,6 +322,7 @@ namespace Dune
         }
         else
         {
+          out << "#endif" << std::endl;
           out << "#endif" << std::endl;
           out << "#endif" << std::endl;
         }
