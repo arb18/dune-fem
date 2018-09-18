@@ -2,10 +2,12 @@
 #define DUNE_FEM_EVALUATECALLER_HH
 
 #include <cstdlib>
+#include <iostream>
 #include <vector>
 
 #include <dune/common/exceptions.hh>
 #include <dune/fem/misc/threads/threadsafevalue.hh>
+
 
 #ifdef USE_BASEFUNCTIONSET_CODEGEN
 #define CODEGEN_INCLUDEMAXNUMS

@@ -106,10 +106,6 @@ namespace Dune
        */
       template< class Point, class Functor >
       void hessianEach ( const Point &x, Functor functor ) const;
-
-      const ScalarShapeFunctionSetType &scalarShapeFunctionSet () const { return scalarShapeFunctionSet_; }
-
-
     };
 
   } // namespace Fem
