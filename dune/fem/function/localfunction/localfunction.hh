@@ -409,14 +409,9 @@ namespace Dune
       {
         // make sure vec size if large enough
         static_assert( sizeof...( Vectors ) > 0, "evaluateQuadrature needs to be called with at least one vector." );
-        //std::ignore =
-        //  std::make_tuple( ( evaluateQuadrature( quad, vec, typename std::decay< decltype( vec[ 0 ] ) >::type() ), 1 )
-        //    ... );
-        // TODO: implement more efficient version via codegen
-        //for( const auto& qp : quad )
-        // {
-        //  hessian( qp, vec[ qp.index() ] );
-        //}
+        std::ignore =
+           std::make_tuple( ( evaluateQuadrature( quad, vec, typename std::decay< decltype( vec[ 0 ] ) >::type() ), 1 )
+           ... );
       }
 
       /** \brief return const reference to local Dof Vector  */
