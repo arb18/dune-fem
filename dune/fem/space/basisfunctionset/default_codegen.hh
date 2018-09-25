@@ -5,7 +5,6 @@
 #error "<dune/fem/space/basisfunctionset/default.hh> included before codegen version"
 #endif
 
-
 #ifndef BASEFUNCTIONSET_CODEGEN_GENERATE
 #define USE_BASEFUNCTIONSET_CODEGEN
 #endif
@@ -25,6 +24,7 @@
 #define USE_BASEFUNCTIONSET_OPTIMIZED
 #endif
 
+#warning "Codegen BasisFunctionSet is used"
 
 // C++ includes
 #include <cassert>
