@@ -73,8 +73,6 @@ namespace Dune
       const static size_t domainLocalBlockSize = DomainSpaceType::localBlockSize;
       const static size_t rangeLocalBlockSize = RangeSpaceType::localBlockSize;
 
-      static_assert( domainLocalBlockSize == rangeLocalBlockSize, "PetscLinearOperator only works for domainLocalBlockSize == rangeLocalBlockSize. " );
-
     private:
       enum Status {statAssembled=0,statAdd=1,statInsert=2,statGet=3,statNothing=4};
 
@@ -185,12 +183,11 @@ namespace Dune
           petscArg_.reset();
           petscDest_.reset();
 
-          assert( domainLocalBlockSize == rangeLocalBlockSize );
           // create matrix
           ::Dune::Petsc::MatCreate( &petscMatrix_ );
 
           PetscInt bs = 1;
-          if( domainLocalBlockSize > 1 )
+          if( domainLocalBlockSize > 1 && (domainLocalBlockSize == rangeLocalBlockSize) )
           {
             bs = domainLocalBlockSize ;
             ::Dune::Petsc::MatSetType( petscMatrix_, MATBAIJ );
