@@ -106,9 +106,6 @@ namespace Dune
         if( helper && comm )
           return ;
 
-        if( helper || comm )
-          DUNE_THROW( InvalidStateException, "MPIManager has already been initialized." );
-
         // if not already called, this will call MPI_Init
         helper = &MPIHelper::instance( argc, argv );
         comm.reset( new CollectiveCommunication( helper->getCommunicator() ) );
