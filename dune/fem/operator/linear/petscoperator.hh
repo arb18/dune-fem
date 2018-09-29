@@ -67,8 +67,8 @@ namespace Dune
       typedef PetscDiscreteFunction< DomainSpaceType > PetscDomainFunctionType;
       typedef PetscDiscreteFunction< RangeSpaceType  > PetscRangeFunctionType;
 
-      typedef typename DomainSpaceType::GridPartType::template Codim< 0 >::EntityType RowEntityType;
-      typedef typename RangeSpaceType::GridPartType::template Codim< 0 >::EntityType ColumnEntityType;
+      typedef typename DomainSpaceType::GridPartType::template Codim< 0 >::EntityType DomainEntityType;
+      typedef typename RangeSpaceType::GridPartType::template Codim< 0 >::EntityType  RangeEntityType;
 
       const static size_t domainLocalBlockSize = DomainSpaceType::localBlockSize;
       const static size_t rangeLocalBlockSize = RangeSpaceType::localBlockSize;
@@ -199,11 +199,13 @@ namespace Dune
             ::Dune::Petsc::MatSetType( petscMatrix_, MATAIJ );
           }
 
-          // set sizes of the matrix
-          const PetscInt localRows = domainMappers_.ghostMapper().interiorSize() * domainLocalBlockSize;
-          const PetscInt localCols = rangeMappers_.ghostMapper().interiorSize() * rangeLocalBlockSize;
-          const PetscInt globalRows = domainMappers_.parallelMapper().size() * domainLocalBlockSize;
-          const PetscInt globalCols = rangeMappers_.parallelMapper().size() * rangeLocalBlockSize;
+          // set sizes of the matrix (columns == domain and rows == range)
+          const PetscInt localCols = domainMappers_.ghostMapper().interiorSize() * domainLocalBlockSize;
+          const PetscInt localRows = rangeMappers_.ghostMapper().interiorSize() * rangeLocalBlockSize;
+
+          const PetscInt globalCols = domainMappers_.parallelMapper().size() * domainLocalBlockSize;
+          const PetscInt globalRows = rangeMappers_.parallelMapper().size() * rangeLocalBlockSize;
+
           ::Dune::Petsc::MatSetSizes( petscMatrix_, localRows, localCols, globalRows, globalCols );
 
           DomainSlaveDofsType domainSlaveDofs( domainMappers_.ghostMapper() );
@@ -264,17 +266,17 @@ namespace Dune
       }
 
       //! return local matrix representation
-      LocalMatrixType localMatrix ( const RowEntityType &rowEntity, const ColumnEntityType &colEntity ) const
+      LocalMatrixType localMatrix ( const DomainEntityType &domainEntity, const RangeEntityType &rangeEntity ) const
       {
-        return LocalMatrixType(localMatrixStack_,rowEntity,colEntity);
+        return LocalMatrixType(localMatrixStack_, domainEntity, rangeEntity);
       }
-      LocalColumnObjectType localColumn( const ColumnEntityType &colEntity ) const
+      LocalColumnObjectType localColumn( const DomainEntityType &colEntity ) const
       {
         return LocalColumnObjectType ( *this, colEntity );
       }
 
       template< class LocalMatrix >
-      void addLocalMatrix ( const RowEntityType &domainEntity, const ColumnEntityType &rangeEntity, const LocalMatrix &localMat )
+      void addLocalMatrix ( const DomainEntityType &domainEntity, const RangeEntityType &rangeEntity, const LocalMatrix &localMat )
       {
         assert( status_==statAssembled || status_==statAdd );
         setStatus( statAdd );
@@ -293,7 +295,7 @@ namespace Dune
       }
 
       template< class LocalMatrix, class Scalar >
-      void addScaledLocalMatrix ( const RowEntityType &domainEntity, const ColumnEntityType &rangeEntity, const LocalMatrix &localMat, const Scalar &s )
+      void addScaledLocalMatrix ( const DomainEntityType &domainEntity, const RangeEntityType &rangeEntity, const LocalMatrix &localMat, const Scalar &s )
       {
         assert( status_==statAssembled || status_==statAdd );
         setStatus( statAdd );
@@ -312,7 +314,7 @@ namespace Dune
       }
 
       template< class LocalMatrix >
-      void setLocalMatrix ( const RowEntityType &domainEntity, const ColumnEntityType &rangeEntity, const LocalMatrix &localMat )
+      void setLocalMatrix ( const DomainEntityType &domainEntity, const RangeEntityType &rangeEntity, const LocalMatrix &localMat )
       {
         assert( status_==statAssembled || status_==statInsert );
         setStatus( statInsert );
@@ -333,7 +335,7 @@ namespace Dune
 
 
       template< class LocalMatrix >
-      void getLocalMatrix ( const RowEntityType &domainEntity, const ColumnEntityType &rangeEntity, LocalMatrix &localMat ) const
+      void getLocalMatrix ( const DomainEntityType &domainEntity, const RangeEntityType &rangeEntity, LocalMatrix &localMat ) const
       {
         assert( status_==statAssembled || status_==statGet );
         setStatus( statGet );
@@ -407,7 +409,7 @@ namespace Dune
        * data fields
        */
       DomainMappersType domainMappers_;
-      RangeMappersType rangeMappers_;
+      RangeMappersType  rangeMappers_;
 
       int sequence_ = -1;
       mutable Mat petscMatrix_;
@@ -493,7 +495,7 @@ namespace Dune
         }
       }
 
-      void init ( const RowEntityType &domainEntity, const ColumnEntityType &rangeEntity )
+      void init ( const DomainEntityType &domainEntity, const RangeEntityType &rangeEntity )
       {
         // call initialize on base class
         BaseType :: init( domainEntity, rangeEntity );
