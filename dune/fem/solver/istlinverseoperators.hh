@@ -139,6 +139,8 @@ namespace Dune
         solver.apply( x, rhs, result );
       }
 
+      void setMaxIterations( unsigned int maxIterations ) { maxIterations_ = maxIterations; }
+
     private:
       ReductionType reduction_;
       unsigned int maxIterations_;
@@ -181,7 +183,7 @@ namespace Dune
         solver.apply( x, rhs, result );
       }
 
-      void setMaxIterations( unsigned int maxIterations ) { maxIterations_ = maxIterations_; }
+      void setMaxIterations( unsigned int maxIterations ) { maxIterations_ = maxIterations; }
 
     private:
       ReductionType reduction_;
