@@ -728,13 +728,7 @@ namespace Dune
       }
 
       //! return matrix adapter object
-      const MatrixAdapterType& matrixAdapter() const
-      {
-        createMatrixAdapter();
-        return *matrixAdap_;
-      }
-
-      MatrixAdapterType& matrixAdapter()
+      MatrixAdapterType& matrixAdapter() const
       {
         createMatrixAdapter();
         return *matrixAdap_;
