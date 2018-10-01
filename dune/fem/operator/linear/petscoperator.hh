@@ -14,6 +14,7 @@
 
 #include <dune/fem/function/petscdiscretefunction/petscdiscretefunction.hh>
 #include <dune/fem/misc/functor.hh>
+#include <dune/fem/misc/fmatrixconverter.hh>
 #include <dune/fem/misc/petsc/petsccommon.hh>
 #include <dune/fem/operator/common/localmatrix.hh>
 #include <dune/fem/operator/common/localmatrixwrapper.hh>
@@ -70,11 +71,14 @@ namespace Dune
       typedef typename DomainSpaceType::GridPartType::template Codim< 0 >::EntityType DomainEntityType;
       typedef typename RangeSpaceType::GridPartType::template Codim< 0 >::EntityType  RangeEntityType;
 
-      const static size_t domainLocalBlockSize = DomainSpaceType::localBlockSize;
-      const static size_t rangeLocalBlockSize = RangeSpaceType::localBlockSize;
+      static const unsigned int domainLocalBlockSize = DomainSpaceType::localBlockSize;
+      static const unsigned int rangeLocalBlockSize  = RangeSpaceType::localBlockSize;
 
       static constexpr bool blockedMatrix = domainLocalBlockSize > 1 &&
         domainLocalBlockSize == rangeLocalBlockSize ;
+
+      typedef FlatFieldMatrix< RangeFieldType, domainLocalBlockSize, rangeLocalBlockSize > MatrixBlockType;
+      typedef MatrixBlockType  block_type;
 
     private:
       enum Status {statAssembled=0,statAdd=1,statInsert=2,statGet=3,statNothing=4};
@@ -168,6 +172,12 @@ namespace Dune
       void reserve ()
       {
         reserve( SimpleStencil<DomainSpaceType,RangeSpaceType>(0) );
+      }
+
+      template <class Set>
+      void reserve (const std::vector< Set >& sparsityPattern )
+      {
+        reserve( StencilWrapper< DomainSpaceType,RangeSpaceType, Set >( sparsityPattern ) );
       }
 
       //! reserve memory for assemble based on the provided stencil
@@ -331,6 +341,58 @@ namespace Dune
       }
 
     public:
+      void unitRow( const PetscInt row, const PetscScalar diag = 1.0 )
+      {
+        std::array< PetscInt, domainLocalBlockSize > rows;
+        for( unsigned int i=0, r = row * domainLocalBlockSize; i<domainLocalBlockSize; ++i, ++r )
+          rows[ i ] = r;
+
+        // set given row to a zero row with diagonal entry equal to diag
+        ::Dune::Petsc::MatZeroRows( petscMatrix_, domainLocalBlockSize, rows.data(), diag );
+      }
+
+    protected:
+      template< class PetscOp >
+      void applyToBlock ( const PetscInt row, const PetscInt col, const MatrixBlockType& block, PetscOp op )
+      {
+        ::Dune::Petsc::MatSetValuesBlocked( petscMatrix_, 1, &row, 1, &col, block.data(), op );
+        setStatus( statAssembled );
+      }
+
+      template< class LocalBlock, class PetscOp >
+      void applyToBlock ( const size_t row, const size_t col, const LocalBlock& block, PetscOp op )
+      {
+        assert( block.rows() == rangeLocalBlockSize );
+        assert( block.cols() == domainLocalBlockSize );
+
+        // copy to MatrixBlockType data structure suited to be inserted into Mat
+        MatrixBlockType matBlock( block );
+        applyToBlock( row, col, matBlock, op );
+      }
+
+    public:
+      template< class LocalBlock >
+      void setBlock ( const size_t row, const size_t col, const LocalBlock& block )
+      {
+        assert( status_==statAssembled || status_==statInsert );
+        assert( row < std::numeric_limits< int > :: max() );
+        assert( col < std::numeric_limits< int > :: max() );
+
+        setStatus( statInsert );
+        applyToBlock( static_cast< PetscInt > (row), static_cast< PetscInt > (col), block, INSERT_VALUES );
+      }
+
+      template< class LocalBlock >
+      void addBlock ( const size_t row, const size_t col, const LocalBlock& block )
+      {
+        assert( status_==statAssembled || status_==statInsert );
+        assert( row < std::numeric_limits< int > :: max() );
+        assert( col < std::numeric_limits< int > :: max() );
+
+        setStatus( statAdd );
+        applyToBlock( static_cast< PetscInt > (row), static_cast< PetscInt > (col), block, ADD_VALUES );
+      }
+
       template< class LocalMatrix >
       void addLocalMatrix ( const DomainEntityType &domainEntity, const RangeEntityType &rangeEntity, const LocalMatrix &localMat )
       {
