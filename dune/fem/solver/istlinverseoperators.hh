@@ -186,17 +186,7 @@ namespace Dune
         }
         else if( method_ == SolverParameter::superlu )
         {
-          DUNE_THROW(NotImplemented,"ISTLSolverAdapter::operator(): superlu not yet implemented");
-          /*
-          // create solver
-          /// check dynamic cast to ISTLParallelMatrixAdapterInterface and then
-          // call getmat and use MatrixType
-          typedef typename MatrixAdapterType :: MatrixType MatrixType;
-          typedef typename MatrixType :: BaseType ISTLMatrixType;
-          SuperLU< ISTLMatrixType > solver( matrix.getmat(), verbose );
-          solver.apply( x, rhs, result );
-          return ;
-          */
+          callSuperLU( op, rhs, x, result );
         }
         else
         {
@@ -207,6 +197,27 @@ namespace Dune
       void setMaxIterations( unsigned int maxIterations ) { maxIterations_ = maxIterations; }
 
     protected:
+      template<class Matrix>
+      void callSuperLU ( Dune::AssembledLinearOperator< Matrix, domain_type, range_type>& op,
+                         range_type &rhs, domain_type &x,
+                         Dune::InverseOperatorResult &result ) const
+      {
+#if HAVE_SUPERLU
+        const Matrix& matrix = op.getmat();
+        SuperLU< Matrix > solver( matrix, verbose_ );
+        solver.apply( x, rhs, result );
+#else
+        DUNE_THROW(NotImplemented,"ISTLSolverAdapter::callSuperLU: SuperLU solver selected but SuperLU not available!");
+#endif
+      }
+
+      template<class Op>
+      void callSuperLU ( Op& op, range_type &rhs, domain_type &x,
+                         Dune::InverseOperatorResult &result ) const
+      {
+        DUNE_THROW(NotImplemented,"ISTLSolverAdapter::callSuperLU: SuperLU only works for AssembledLinearOperators!");
+      }
+
       ReductionType reduction_;
       const int method_;
       const unsigned int restart_;
