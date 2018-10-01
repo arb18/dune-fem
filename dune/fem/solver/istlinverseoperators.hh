@@ -197,8 +197,8 @@ namespace Dune
       void setMaxIterations( unsigned int maxIterations ) { maxIterations_ = maxIterations; }
 
     protected:
-      template<class Matrix>
-      void callSuperLU ( Dune::AssembledLinearOperator< Matrix, domain_type, range_type>& op,
+      template< class Matrix >
+      void callSuperLU ( ISTLParallelMatrixAdapterInterface< Matrix >& op,
                          range_type &rhs, domain_type &x,
                          Dune::InverseOperatorResult &result ) const
       {
@@ -211,8 +211,8 @@ namespace Dune
 #endif
       }
 
-      template<class Op>
-      void callSuperLU ( Op& op, range_type &rhs, domain_type &x,
+      template< class Op >
+      void callSuperLU ( ISTLLinearOperatorAdapter< Op >& op, range_type &rhs, domain_type &x,
                          Dune::InverseOperatorResult &result ) const
       {
         DUNE_THROW(NotImplemented,"ISTLSolverAdapter::callSuperLU: SuperLU only works for AssembledLinearOperators!");
