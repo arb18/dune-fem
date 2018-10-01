@@ -271,6 +271,10 @@ namespace Dune
                             const ParameterReader & parameter = Parameter::container() )
         : ISTLInverseOperator( redEps, absLimit, std::numeric_limits< unsigned int >::max(), SolverParameter(parameter).verbose(), parameter ) {}
 
+      ISTLInverseOperator ( double redEps, double absLimit,
+                            const SolverParameter & parameter )
+        : ISTLInverseOperator( redEps, absLimit, std::numeric_limits< unsigned int >::max(), parameter.verbose(), parameter.parameter() ) {}
+
       ISTLInverseOperator ( double redEps, double absLimit, unsigned int maxIterations,
                             const ParameterReader & parameter = Parameter::container() )
         : ISTLInverseOperator( redEps, absLimit, maxIterations, false, parameter ) {}
@@ -341,11 +345,13 @@ namespace Dune
         apply( u, w );
       }
 
+      /*
       template <class DomainFunction, class RangeFunction>
       void operator() ( const DomainFunction& u, RangeFunction& w ) const
       {
         apply( u, w );
       }
+      */
 
       unsigned int iterations () const { return result_.iterations; }
       void setMaxIterations ( unsigned int maxIterations ) { solverAdapter_.setMaxIterations( maxIterations ); }
