@@ -288,58 +288,6 @@ namespace Dune
         return LocalColumnObjectType ( *this, colEntity );
       }
 
-    protected:
-      template< class LocalMatrix, class Operation, class PetscOp >
-      void applyLocalMatrix ( const DomainEntityType &domainEntity, const RangeEntityType &rangeEntity,
-                              const LocalMatrix &localMat, const Operation& operation,
-                              PetscOp petscOp )
-      {
-        std::vector< PetscInt >&  r = r_;
-        std::vector< PetscInt >&  c = c_;
-        std::vector< PetscScalar >& v = v_;
-
-        if( blockedMatrix )
-        {
-          setupIndicesBlocked( rangeMappers_,  rangeEntity,  r );
-          setupIndicesBlocked( domainMappers_, domainEntity, c );
-
-          // domainLocalBlockSize == rangeLocalBlockSize
-          const size_t rSize = r.size() * domainLocalBlockSize ;
-          const size_t cSize = c.size() * domainLocalBlockSize ;
-
-          v.resize( rSize * cSize );
-
-          for( std::size_t i =0 ; i< rSize; ++i )
-          {
-            for( std::size_t j =0; j< cSize; ++j )
-            {
-              v[ i * c.size() +j ] = operation( localMat.get( i, j ) );
-            }
-          }
-
-          ::Dune::Petsc::MatSetValuesBlocked( petscMatrix_, r.size(), r.data(), c.size(), c.data(), v.data(), petscOp );
-        }
-        else
-        {
-          setupIndices( rangeMappers_,  rangeEntity,  r );
-          setupIndices( domainMappers_, domainEntity, c );
-
-          const size_t rSize = r.size();
-          const size_t cSize = c.size();
-          v.resize( rSize * cSize );
-          for( std::size_t i =0 ; i< rSize; ++i )
-          {
-            for( std::size_t j =0; j< cSize; ++j )
-            {
-              v[ i * c.size() +j ] = operation( localMat.get( i, j ) );
-            }
-          }
-
-          ::Dune::Petsc::MatSetValues( petscMatrix_, rSize, r.data(), cSize, c.data(), v.data(), petscOp );
-        }
-        setStatus( statAssembled );
-      }
-
     public:
       void unitRow( const PetscInt row, const PetscScalar diag = 1.0 )
       {
@@ -393,6 +341,59 @@ namespace Dune
         applyToBlock( static_cast< PetscInt > (row), static_cast< PetscInt > (col), block, ADD_VALUES );
       }
 
+    protected:
+      template< class LocalMatrix, class Operation, class PetscOp >
+      void applyLocalMatrix ( const DomainEntityType &domainEntity, const RangeEntityType &rangeEntity,
+                              const LocalMatrix &localMat, const Operation& operation,
+                              PetscOp petscOp )
+      {
+        std::vector< PetscInt >&  r = r_;
+        std::vector< PetscInt >&  c = c_;
+        std::vector< PetscScalar >& v = v_;
+
+        if( blockedMatrix )
+        {
+          setupIndicesBlocked( rangeMappers_,  rangeEntity,  r );
+          setupIndicesBlocked( domainMappers_, domainEntity, c );
+
+          // domainLocalBlockSize == rangeLocalBlockSize
+          const size_t rSize = r.size() * domainLocalBlockSize ;
+          const size_t cSize = c.size() * domainLocalBlockSize ;
+
+          v.resize( rSize * cSize );
+
+          for( std::size_t i =0 ; i< rSize; ++i )
+          {
+            for( std::size_t j =0; j< cSize; ++j )
+            {
+              v[ i * c.size() +j ] = operation( localMat.get( i, j ) );
+            }
+          }
+
+          ::Dune::Petsc::MatSetValuesBlocked( petscMatrix_, r.size(), r.data(), c.size(), c.data(), v.data(), petscOp );
+        }
+        else
+        {
+          setupIndices( rangeMappers_,  rangeEntity,  r );
+          setupIndices( domainMappers_, domainEntity, c );
+
+          const size_t rSize = r.size();
+          const size_t cSize = c.size();
+          v.resize( rSize * cSize );
+          for( std::size_t i =0 ; i< rSize; ++i )
+          {
+            for( std::size_t j =0; j< cSize; ++j )
+            {
+              v[ i * c.size() +j ] = operation( localMat.get( i, j ) );
+            }
+          }
+
+          ::Dune::Petsc::MatSetValues( petscMatrix_, rSize, r.data(), cSize, c.data(), v.data(), petscOp );
+        }
+        setStatus( statAssembled );
+      }
+
+    public:
       template< class LocalMatrix >
       void addLocalMatrix ( const DomainEntityType &domainEntity, const RangeEntityType &rangeEntity, const LocalMatrix &localMat )
       {
@@ -433,11 +434,14 @@ namespace Dune
         assert( status_==statAssembled || status_==statGet );
         setStatus( statGet );
 
-        std::vector< PetscInt > r, c;
+        std::vector< PetscInt >&  r = r_;
+        std::vector< PetscInt >&  c = c_;
+        std::vector< PetscScalar >& v = v_;
+
         setupIndices( rangeMappers_, rangeEntity, r );
         setupIndices( domainMappers_, domainEntity, c );
 
-        std::vector< PetscScalar > v( r.size() * c.size() );
+        v.resize( r.size() * c.size() );
         ::Dune::Petsc::MatGetValues( petscMatrix_, r.size(), r.data(), c.size(), c.data(), v.data() );
 
         for( std::size_t i =0 ; i< r.size(); ++i )
