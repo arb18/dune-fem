@@ -32,7 +32,7 @@ namespace Dune
       typedef Dune::Preconditioner< typename Preconditioner::RangeFunctionType::DofStorageType, typename Preconditioner::DomainFunctionType::DofStorageType > BaseType;
 
       typedef typename Preconditioner::DomainFunctionType DomainFunctionType;
-      typedef typename Preconditioner::RangeFunctionType RangeFunctionType;
+      typedef typename Preconditioner::RangeFunctionType  RangeFunctionType;
 
     public:
 #if ! DUNE_VERSION_NEWER(DUNE_ISTL, 2, 6)
@@ -40,11 +40,11 @@ namespace Dune
 #endif // #if ! DUNE_VERSION_NEWER(DUNE_ISTL, 2, 6)
 
       typedef typename BaseType::domain_type domain_type;
-      typedef typename BaseType::range_type range_type;
-      typedef typename BaseType::field_type field_type;
+      typedef typename BaseType::range_type  range_type;
+      typedef typename BaseType::field_type  field_type;
 
       typedef typename DomainFunctionType::DiscreteFunctionSpaceType DomainFunctionSpaceType;
-      typedef typename RangeFunctionType::DiscreteFunctionSpaceType RangeFunctionSpaceType;
+      typedef typename RangeFunctionType::DiscreteFunctionSpaceType  RangeFunctionSpaceType;
 
       ISTLPreconditionAdapter ( const Preconditioner *precon, const DomainFunctionSpaceType &domainSpace, const RangeFunctionSpaceType &rangeSpace )
       : precon_( precon ),
@@ -242,8 +242,8 @@ namespace Dune
                        Dune::Fem::ISTLLinearOperator< DomainFunctionType, RangeFunctionType >,
                        OperatorType > :: type  AssembledOperatorType;
 
-      typedef ISTLLinearOperatorAdapter< OperatorType > ISTLOperatorType;
-      typedef ISTLPreconditionAdapter< OperatorType >   ISTLPreconditionerAdapterType;
+      typedef ISTLLinearOperatorAdapter< OperatorType >       ISTLOperatorType;
+      typedef ISTLPreconditionAdapter< PreconditionerType >   ISTLPreconditionerAdapterType;
 
       typedef typename RangeFunctionType :: ScalarProductType     ParallelScalarProductType;
       typedef typename RangeFunctionType::DofStorageType BlockVectorType;
@@ -345,7 +345,9 @@ namespace Dune
       void apply( const DomainFunction& u, RangeFunctionType& w ) const
       {
         auto& scp = w.scalarProduct();
-        ISTLPreconditionerAdapterType istlPreconditioner( preconditioner_, w.space(), u.space() );
+        // u may not be a discrete function, therefore use w.space()
+        const DiscreteFunctionSpaceType& space = w.space();
+        ISTLPreconditionerAdapterType istlPreconditioner( preconditioner_, space, space );
 
         if( matrixOp_ )
         {
@@ -360,7 +362,7 @@ namespace Dune
         else
         {
           assert( operator_ );
-          ISTLOperatorType istlOperator( *operator_, w.space(), u.space() );
+          ISTLOperatorType istlOperator( *operator_, space, space );
           solve( istlOperator, scp, istlPreconditioner, u, w );
         }
       }
@@ -395,7 +397,8 @@ namespace Dune
       {
         if( ! rhs_ )
         {
-          rhs_.reset( new DomainFunctionType( "ISTLInvOp::rhs", u.space() ) );
+          // u may not be a discrete function, therefore use w.space()
+          rhs_.reset( new DomainFunctionType( "ISTLInvOp::rhs", w.space() ) );
         }
 
         // copy right hand side since ISTL solvers seem to modify it
