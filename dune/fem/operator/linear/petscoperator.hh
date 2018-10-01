@@ -523,9 +523,9 @@ namespace Dune
       mutable std::unique_ptr< PetscDomainFunctionType > petscArg_;
       mutable std::unique_ptr< PetscRangeFunctionType  > petscDest_;
 
-      std::vector< PetscScalar > v_;
-      std::vector< PetscInt    > r_;
-      std::vector< PetscInt    > c_;
+      mutable std::vector< PetscScalar > v_;
+      mutable std::vector< PetscInt    > r_;
+      mutable std::vector< PetscInt    > c_;
     };
 
 
