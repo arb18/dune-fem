@@ -74,7 +74,7 @@ namespace Dune
           { "cg", "bicgstab", "gmres", "minres", "gradient", "loop"  };
         int methodType = gmres ;
         if( parameter_.exists( keyPrefix_ + "krylovmethod" ) )
-          methodType = parameter_.getEnum( keyPrefix_ + "krylovmethod", krylovMethodTable, gmres );
+          methodType = parameter_.getEnum( keyPrefix_ + "krylovmethod", krylovMethodTable );
         else
           methodType = parameter_.getEnum( "krylovmethod", krylovMethodTable, gmres );
         return methodType;
