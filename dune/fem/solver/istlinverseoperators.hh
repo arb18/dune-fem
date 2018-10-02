@@ -197,13 +197,14 @@ namespace Dune
       void setMaxIterations( unsigned int maxIterations ) { maxIterations_ = maxIterations; }
 
     protected:
-      template< class Matrix >
-      void callSuperLU ( ISTLParallelMatrixAdapterInterface< Matrix >& op,
+      template< class ImprovedMatrix >
+      void callSuperLU ( ISTLParallelMatrixAdapterInterface< ImprovedMatrix >& op,
                          range_type &rhs, domain_type &x,
                          Dune::InverseOperatorResult &result ) const
       {
 #if HAVE_SUPERLU
-        const Matrix& matrix = op.getmat();
+        typedef typename ImprovedMatrix :: BaseType Matrix;
+        const ImprovedMatrix& matrix = op.getmat();
         SuperLU< Matrix > solver( matrix, verbose_ );
         solver.apply( x, rhs, result );
 #else
