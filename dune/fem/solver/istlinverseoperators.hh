@@ -345,13 +345,12 @@ namespace Dune
         apply( u, w );
       }
 
-      /*
-      template <class DomainFunction, class RangeFunction>
-      void operator() ( const DomainFunction& u, RangeFunction& w ) const
+      template <class DImpl, class RImpl>
+      void operator() ( const DiscreteFunctionInterface< DImpl >&u,
+                        DiscreteFunctionInterface< RImpl >& w ) const
       {
         apply( u, w );
       }
-      */
 
       unsigned int iterations () const { return result_.iterations; }
       void setMaxIterations ( unsigned int maxIterations ) { solverAdapter_.setMaxIterations( maxIterations ); }
