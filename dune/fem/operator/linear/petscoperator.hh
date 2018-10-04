@@ -16,8 +16,10 @@
 #include <dune/fem/misc/functor.hh>
 #include <dune/fem/misc/fmatrixconverter.hh>
 #include <dune/fem/misc/petsc/petsccommon.hh>
+#include <dune/fem/operator/common/localcontribution.hh>
 #include <dune/fem/operator/common/localmatrix.hh>
 #include <dune/fem/operator/common/localmatrixwrapper.hh>
+#include <dune/fem/operator/common/temporarylocalmatrix.hh>
 #include <dune/fem/operator/common/operator.hh>
 #include <dune/fem/operator/common/stencil.hh>
 #include <dune/fem/operator/matrix/columnobject.hh>
@@ -342,14 +344,48 @@ namespace Dune
       }
 
     protected:
+      typedef TemporaryLocalMatrix< DomainSpaceType, RangeSpaceType > TemporaryLocalMatrixType;
+
+      // specialization for temporary local matrix, then copy of values is not needed
+      template <class Operation>
+      const PetscScalar* getValues( const unsigned int rSize, const unsigned int cSize,
+                                    const TemporaryLocalMatrixType &localMat, const Operation& )
+      {
+        return localMat.data();
+      }
+
+      // specialization for temporary local matrix, then copy of values is not needed
+      template <class LM, class Operation>
+      const PetscScalar* getValues( const unsigned int rSize, const unsigned int cSize,
+                                    const Assembly::Impl::LocalMatrixGetter< LM >& localMat, const Operation& )
+      {
+        return localMat.localMatrix().data();
+      }
+
+      // retrieve values for arbitrary local matrix
+      template <class LocalMatrix, class Operation>
+      const PetscScalar* getValues( const unsigned int rSize, const unsigned int cSize,
+                                    const LocalMatrix &localMat, const Operation& operation )
+      {
+        std::vector< PetscScalar >& v = v_;
+        v.resize( rSize * cSize );
+        for( unsigned int i = 0, ic = 0 ; i< rSize; ++i )
+        {
+          for( unsigned int j =0; j< cSize; ++j, ++ic )
+          {
+            v[ ic ] = operation( localMat.get( i, j ) );
+          }
+        }
+        return v.data();
+      }
+
       template< class LocalMatrix, class Operation, class PetscOp >
       void applyLocalMatrix ( const DomainEntityType &domainEntity, const RangeEntityType &rangeEntity,
                               const LocalMatrix &localMat, const Operation& operation,
                               PetscOp petscOp )
       {
-        std::vector< PetscInt >&  r = r_;
-        std::vector< PetscInt >&  c = c_;
-        std::vector< PetscScalar >& v = v_;
+        std::vector< PetscInt >& r = r_;
+        std::vector< PetscInt >& c = c_;
 
         if( blockedMatrix )
         {
@@ -357,38 +393,22 @@ namespace Dune
           setupIndicesBlocked( domainMappers_, domainEntity, c );
 
           // domainLocalBlockSize == rangeLocalBlockSize
-          const size_t rSize = r.size() * domainLocalBlockSize ;
-          const size_t cSize = c.size() * domainLocalBlockSize ;
+          const unsigned int rSize = r.size() * domainLocalBlockSize ;
+          const unsigned int cSize = c.size() * domainLocalBlockSize ;
 
-          v.resize( rSize * cSize );
-
-          for( std::size_t i =0 ; i< rSize; ++i )
-          {
-            for( std::size_t j =0; j< cSize; ++j )
-            {
-              v[ i * c.size() +j ] = operation( localMat.get( i, j ) );
-            }
-          }
-
-          ::Dune::Petsc::MatSetValuesBlocked( petscMatrix_, r.size(), r.data(), c.size(), c.data(), v.data(), petscOp );
+          const PetscScalar* values = getValues( rSize, cSize, localMat, operation );
+          ::Dune::Petsc::MatSetValuesBlocked( petscMatrix_, r.size(), r.data(), c.size(), c.data(), values, petscOp );
         }
         else
         {
           setupIndices( rangeMappers_,  rangeEntity,  r );
           setupIndices( domainMappers_, domainEntity, c );
 
-          const size_t rSize = r.size();
-          const size_t cSize = c.size();
-          v.resize( rSize * cSize );
-          for( std::size_t i =0 ; i< rSize; ++i )
-          {
-            for( std::size_t j =0; j< cSize; ++j )
-            {
-              v[ i * c.size() +j ] = operation( localMat.get( i, j ) );
-            }
-          }
+          const unsigned int rSize = r.size();
+          const unsigned int cSize = c.size();
 
-          ::Dune::Petsc::MatSetValues( petscMatrix_, rSize, r.data(), cSize, c.data(), v.data(), petscOp );
+          const PetscScalar* values = getValues( rSize, cSize, localMat, operation );
+          ::Dune::Petsc::MatSetValues( petscMatrix_, rSize, r.data(), cSize, c.data(), values, petscOp );
         }
         setStatus( statAssembled );
       }
