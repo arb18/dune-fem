@@ -17,7 +17,7 @@ namespace Dune
       // key prefix, default is fem.solver (can be overloaded by user)
       const std::string keyPrefix_;
 
-      ParameterReader parameter_;
+      const ParameterReader &parameter_;
 
     public:
       // identifier for Fem and ISTL solvers
@@ -72,7 +72,7 @@ namespace Dune
       {
         const std::string krylovMethodTable[] =
           { "cg", "bicgstab", "gmres", "minres", "gradient", "loop"  };
-        int methodType = gmres ;
+        int methodType = gmres;
         if( parameter_.exists( keyPrefix_ + "krylovmethod" ) )
           methodType = parameter_.getEnum( keyPrefix_ + "krylovmethod", krylovMethodTable );
         else
