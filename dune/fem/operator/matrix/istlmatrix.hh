@@ -700,14 +700,14 @@ namespace Dune
       mutable std::unique_ptr< RowBlockVectorType >    Dest_;
       // overflow fraction for implicit build mode
       const double overflowFraction_;
-
+      ISTLMatrixParameter param_;
     public:
       ISTLMatrixObject(const ISTLMatrixObject&) = delete;
 
       //! constructor
       //! \param rowSpace space defining row structure
       //! \param colSpace space defining column structure
-      ISTLMatrixObject ( const DomainSpaceType &domainSpace, const RangeSpaceType &rangeSpace, const MatrixParameter& param = ISTLMatrixParameter() ) :
+      ISTLMatrixObject ( const DomainSpaceType &domainSpace, const RangeSpaceType &rangeSpace, const ISTLMatrixParameter& param = ISTLMatrixParameter() ) :
         domainSpace_(domainSpace)
         , rangeSpace_(rangeSpace)
         , rowMapper_( rangeSpace.blockMapper() )
@@ -716,6 +716,7 @@ namespace Dune
         , sequence_(-1)
         , localMatrixStack_( *this )
         , overflowFraction_( param.overflowFraction() )
+        , param_(param)
       {}
 
       ThisType &systemMatrix () { return *this; }
@@ -744,7 +745,7 @@ namespace Dune
       {
         if( !matrixAdap_ )
         {
-          matrixAdap_ = ISTLMatrixAdapterFactory< ThisType > :: matrixAdapter( *this );
+          matrixAdap_ = ISTLMatrixAdapterFactory< ThisType > :: matrixAdapter( *this, param_ );
         }
         assert( matrixAdap_ );
       }

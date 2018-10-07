@@ -38,6 +38,9 @@ namespace Dune
       MatrixParameter( const std::string keyPrefix = "" )
       {}
 
+      MatrixParameter( const ParameterReader &parameter, const std::string keyPrefix = "istl." )
+      {}
+
       virtual double overflowFraction () const
       {
         return 1.0;

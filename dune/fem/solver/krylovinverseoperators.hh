@@ -47,13 +47,13 @@ namespace Dune
       KrylovInverseOperator ( const LinearOperator &op, double redEps, double absLimit,
                               const SolverParameter &parameter = SolverParameter(Parameter::container()) )
       : KrylovInverseOperator( op, nullptr, redEps, absLimit,
-                                   parameter.maxLinearIterationsParameter(), parameter.verbose() ) {}
+                                   parameter.maxLinearIterationsParameter(), parameter.verbose(), parameter ) {}
 
       template <class LinearOperator>
       KrylovInverseOperator ( const LinearOperator &op, double redEps, double absLimit,
                               unsigned int maxIterations,
                               const SolverParameter &parameter = SolverParameter(Parameter::container()) )
-      : KrylovInverseOperator( op, nullptr, redEps, absLimit, maxIterations, parameter.verbose() ) {}
+      : KrylovInverseOperator( op, nullptr, redEps, absLimit, maxIterations, parameter.verbose(), parameter ) {}
 
       template <class LinearOperator>
       KrylovInverseOperator ( const LinearOperator &op, const PreconditionerType &preconditioner,
@@ -66,22 +66,22 @@ namespace Dune
                               double redEps, double absLimit,
                               const SolverParameter &parameter = SolverParameter(Parameter::container()) )
       : KrylovInverseOperator( op, &preconditioner, redEps, absLimit, parameter.maxLinearIterationsParameter(),
-                               parameter.verbose() ) {}
+                               parameter.verbose(), parameter ) {}
 
       template <class LinearOperator>
       KrylovInverseOperator ( const LinearOperator &op, const PreconditionerType &preconditioner,
                               double redEps, double absLimit, unsigned int maxIterations,
                               const SolverParameter &parameter = SolverParameter(Parameter::container()) )
-      : KrylovInverseOperator( op, &preconditioner, redEps, absLimit, maxIterations, parameter.verbose() ) {}
+      : KrylovInverseOperator( op, &preconditioner, redEps, absLimit, maxIterations, parameter.verbose(), parameter ) {}
 
       KrylovInverseOperator ( double redEps, double absLimit,
                               const SolverParameter &parameter = SolverParameter(Parameter::container()) )
-      : KrylovInverseOperator( redEps, absLimit, parameter.maxLinearIterationsParameter(), parameter.verbose() ) {}
+      : KrylovInverseOperator( redEps, absLimit, parameter.maxLinearIterationsParameter(), parameter.verbose(), parameter ) {}
 
       KrylovInverseOperator ( double redEps, double absLimit,
                               unsigned int maxIterations,
                               const SolverParameter &parameter = SolverParameter(Parameter::container()) )
-      : KrylovInverseOperator( redEps, absLimit, maxIterations,  parameter.verbose() ) {}
+      : KrylovInverseOperator( redEps, absLimit, maxIterations,  parameter.verbose(), parameter ) {}
 
       KrylovInverseOperator ( double redEps, double absLimit,
                               unsigned int maxIterations, bool verbose,
