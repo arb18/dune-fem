@@ -406,7 +406,7 @@ namespace Dune
 
       DomainFunctionType residual( u );
       RangeFunctionType dw( w );
-      JacobianOperatorType& jOp = jacobian( "jacobianOperator", dw.space(), u.space(), parameter_.parameter() );
+      JacobianOperatorType& jOp = jacobian( "jacobianOperator", dw.space(), u.space()); // , parameter_.parameter() );
 
       stepCompleted_ = true;
       iterations_ = 0;
