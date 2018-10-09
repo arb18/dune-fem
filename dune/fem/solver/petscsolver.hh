@@ -81,18 +81,13 @@ namespace Dune
        *
        *  \note PETSc Krylov solvers uses the relative reduction.
        */
-
       PetscInverseOperator ( const OperatorType &op,
                              double reduction,
                              double absLimit,
                              int maxIter,
                              bool verbose,
-                             const ParameterReader &parameter = Parameter::container() )
-      : reduction_( reduction ),
-        absLimit_( absLimit ),
-        maxIter_( maxIter ),
-        verbose_( verbose ),
-        parameter_( parameter )
+                             const SolverParameter &parameter = SolverParameter(Parameter::container()) )
+      : PetscInverseOperator( reduction, absLimit, maxIter, verbose, parameter )
       {
         bind( op );
       }
@@ -108,12 +103,8 @@ namespace Dune
                              double reduction,
                              double absLimit,
                              int maxIter,
-                             const ParameterReader &parameter = Parameter::container() )
-      : reduction_( reduction ),
-        absLimit_ ( absLimit ),
-        maxIter_( maxIter ),
-        verbose_( parameter.getValue< bool >( "fem.solver.verbose", false ) ),
-        parameter_( parameter )
+                             const SolverParameter &parameter = SolverParameter(Parameter::container()) )
+      : PetscInverseOperator( reduction, absLimit, maxIter, parameter.verbose(), parameter )
       {
         bind( op );
       }
@@ -121,12 +112,8 @@ namespace Dune
       PetscInverseOperator ( const OperatorType &op,
                              double reduction,
                              double absLimit,
-                             const ParameterReader &parameter = Parameter::container() )
-      : reduction_( reduction ),
-        absLimit_ ( absLimit ),
-        maxIter_( std::numeric_limits< int >::max()),
-        verbose_( parameter.getValue< bool >( "fem.solver.verbose", false ) ),
-        parameter_( parameter )
+                             const SolverParameter &parameter = SolverParameter(Parameter::container()) )
+      : PetscInverseOperator( reduction, absLimit, std::numeric_limits< int >::max(), parameter.verbose(), parameter )
       {
         bind( op );
       }
@@ -141,8 +128,8 @@ namespace Dune
        *
        *  \note PETSc Krylov solvers uses the relative reduction.
        */
-
-      PetscInverseOperator ( double reduction, double absLimit, int maxIter, bool verbose, const ParameterReader &parameter = Parameter::container() )
+      PetscInverseOperator ( double reduction, double absLimit, int maxIter, bool verbose,
+                             const SolverParameter &parameter = SolverParameter(Parameter::container()) )
       : reduction_( reduction ),
         absLimit_( absLimit ),
         maxIter_( maxIter ),
@@ -157,30 +144,14 @@ namespace Dune
        *  \param[in] absLimit  absolut limit of residual (not used here)
        *  \param[in] maxIter   maximal iteration steps
        */
-      PetscInverseOperator ( double reduction, double absLimit, int maxIter, const ParameterReader &parameter = Parameter::container() )
-      : reduction_( reduction ),
-        absLimit_ ( absLimit ),
-        maxIter_( maxIter ),
-        verbose_( parameter.getValue< bool >( "fem.solver.verbose", false ) ),
-        parameter_( parameter )
+      PetscInverseOperator ( double reduction, double absLimit, int maxIter,
+                             const SolverParameter &parameter = SolverParameter(Parameter::container()) )
+      : PetscInverseOperator( reduction, absLimit, maxIter, parameter.verbose(), parameter )
       {}
 
-      PetscInverseOperator ( double reduction, double absLimit, const ParameterReader &parameter = Parameter::container() )
-      : reduction_( reduction ),
-        absLimit_ ( absLimit ),
-        maxIter_( std::numeric_limits< int >::max()),
-        verbose_( parameter.getValue< bool >( "fem.solver.verbose", false ) ),
-        parameter_( parameter )
-      {}
-
-      PetscInverseOperator ( const OperatorType &op,
-          double reduction, double absLimit,
-          const SolverParameter &parameter )
-      : PetscInverseOperator( reduction, absLimit, parameter.parameter() )
-      {}
       PetscInverseOperator ( double reduction, double absLimit,
-          const SolverParameter &parameter )
-      : PetscInverseOperator( reduction, absLimit, parameter.parameter() )
+                             const SolverParameter &parameter = SolverParameter(Parameter::container()) )
+      : PetscInverseOperator( reduction, absLimit, std::numeric_limits< int >::max(), parameter.verbose(), parameter )
       {}
 
       void bind ( const OperatorType &op )
@@ -198,7 +169,7 @@ namespace Dune
         ksp_.reset();
       }
 
-      void initialize ( const ParameterReader &parameter )
+      void initialize ( const SolverParameter& parameter )
       {
         if( !matrixOp_ )
           DUNE_THROW(NotImplemented,"Petsc solver with matrix free implementations not yet supported!");
@@ -228,50 +199,67 @@ namespace Dune
         ::Dune::Petsc::KSPSetTolerances(ksp(), reduc, 1.e-50, PETSC_DEFAULT, maxits);
 
         enum class PetscSolver {
-            defaults  = 0,
-            cg        = 1,
-            minres    = 2,
-            bicg      = 3,
-            bicgstab  = 4,
-            gmres     = 5,
-            only_prec = 6
+            cg        = SolverParameter::cg,
+            bicgstab  = SolverParameter::bicgstab,
+            gmres     = SolverParameter::gmres,
+            minres    = SolverParameter::minres,
+            bicg      = minres+1,
+            only_prec = bicg+1,
+            defaults  = only_prec+1
           };
 
-        // see PETSc docu for more types
-        const std::string kspNames[] = { "default", "cg" , "minres", "bicg", "bicgstab", "gmres", "preonly" };
-        PetscSolver kspType = static_cast< PetscSolver >( parameter.getEnum("petsc.kspsolver.method", kspNames, 0 ) );
+        // if special petsc solver parameter exists use that one, otherwise
+        // use krylovMethod from SolverParameter
+        const auto& reader = parameter.parameter();
+        PetscSolver kspType = PetscSolver::defaults;
+        const std::string kspNames[] = { "cg" , "bicgstab", "gmres", "minres", "bicg", "preonly", "defaults" };
+        if( reader.exists("petsc.kspsolver.method") )
+        {
+          // see PETSc docu for more types
+          kspType = static_cast< PetscSolver >( reader.getEnum("petsc.kspsolver.method", kspNames, int(PetscSolver::defaults) ) );
+        }
+        else
+          kspType = static_cast< PetscSolver >( parameter.krylovMethod() );
+
         solverName_ = kspNames[ static_cast< int >( kspType ) ];
 
         //  select linear solver
         switch( kspType )
         {
-          case PetscSolver::defaults:
-            // setup solver context from database/cmdline options
-            ::Dune::Petsc::KSPSetFromOptions( ksp() );
-            ::Dune::Petsc::KSPSetUp( ksp() );
-            break;
           case PetscSolver::cg:
             ::Dune::Petsc::KSPSetType( ksp(), KSPCG );
             break;
+          case PetscSolver::bicgstab:
+            ::Dune::Petsc::KSPSetType( ksp(), KSPBCGS );
+              break;
+          case PetscSolver::gmres:
+            {
+              ::Dune::Petsc::KSPSetType( ksp(), KSPGMRES );
+              PetscInt restart = 10;
+              if( reader.exists("petsc.gmresrestart") )
+              {
+                restart = reader.getValue<int>("petsc.gmresrestart", restart );
+              }
+              else
+                restart = parameter.gmresRestart() ;
+
+              ::Dune::Petsc::KSPGMRESSetRestart( ksp(), restart );
+              break;
+            }
           case PetscSolver::minres:
             ::Dune::Petsc::KSPSetType( ksp(), KSPMINRES );
             break;
           case PetscSolver::bicg:
             ::Dune::Petsc::KSPSetType( ksp(), KSPBICG );
               break;
-          case PetscSolver::bicgstab:
-            ::Dune::Petsc::KSPSetType( ksp(), KSPBCGS );
-              break;
-          case PetscSolver::gmres:
-            {
-              PetscInt restart = parameter.getValue<int>("petsc.gmresrestart", 10 );
-              ::Dune::Petsc::KSPSetType( ksp(), KSPGMRES );
-              ::Dune::Petsc::KSPGMRESSetRestart( ksp(), restart );
-              break;
-            }
           case PetscSolver::only_prec:
             ::Dune::Petsc::KSPSetType( ksp(), KSPPREONLY );
               break;
+          case PetscSolver::defaults:
+            // setup solver context from database/cmdline options
+            ::Dune::Petsc::KSPSetFromOptions( ksp() );
+            ::Dune::Petsc::KSPSetUp( ksp() );
+            break;
           default:
             DUNE_THROW(InvalidStateException,"PetscInverseOperator: invalid solver choosen." );
         }
@@ -298,7 +286,7 @@ namespace Dune
           };
 
         const std::string pcNames[] = { "default", "none", "asm", "sor", "jacobi", "hypre", "ml", "ilu", "icc", "lu" };
-        PetscPrec pcType = static_cast< PetscPrec >( parameter.getEnum("petsc.preconditioning.method", pcNames, 0 ) );
+        PetscPrec pcType = static_cast< PetscPrec >( reader.getEnum("petsc.preconditioning.method", pcNames, 0 ) );
 
         // setup preconditioning context
         PC pc;
@@ -340,7 +328,7 @@ namespace Dune
                 };
 
               const std::string hyprePCNames[] = { "boomer-amg", "parasails", "pilu-t" };
-              HyprePrec hypreType = static_cast< HyprePrec >( parameter.getEnum( "petsc.preconditioning.hypre.method", hyprePCNames, 0 ) );
+              HyprePrec hypreType = static_cast< HyprePrec >( reader.getEnum( "petsc.preconditioning.hypre.method", hyprePCNames, 0 ) );
 
               std::string hypre;
               if ( hypreType == HyprePrec::boomeramg )
@@ -373,7 +361,7 @@ namespace Dune
                 DUNE_THROW( InvalidStateException, "PetscInverseOperator: ilu preconditioner does not worl in parallel." );
 
               // get fill-in level
-              PetscInt pcLevel = parameter.getValue<int>("petsc.preconditioning.levels", 0 );
+              PetscInt pcLevel = reader.getValue<int>("petsc.preconditioning.levels", 0 );
 
               ::Dune::Petsc::PCSetType( pc, PCILU );
               ::Dune::Petsc::PCFactorSetLevels( pc, pcLevel );
@@ -387,7 +375,7 @@ namespace Dune
                 DUNE_THROW( InvalidStateException, "PetscInverseOperator: icc preconditioner does not worl in parallel." );
 
               // get fill-in level
-              PetscInt pcLevel = parameter.getValue<int>("petsc.preconditioning.levels", 0 );
+              PetscInt pcLevel = reader.getValue<int>("petsc.preconditioning.levels", 0 );
 
               ::Dune::Petsc::PCSetType( pc, PCICC );
               ::Dune::Petsc::PCFactorSetLevels( pc, pcLevel );
@@ -405,7 +393,7 @@ namespace Dune
                 };
 
               const std::string factorizationNames[] = { "petsc", "superlu", "mumps" };
-              Factorization factorType = static_cast< Factorization >( parameter.getEnum( "petsc.preconditioning.lu.method", factorizationNames, 0 ) );
+              Factorization factorType = static_cast< Factorization >( reader.getEnum( "petsc.preconditioning.lu.method", factorizationNames, 0 ) );
 
               ::Dune::Petsc::PCSetType( pc, PCLU );
 
@@ -541,7 +529,7 @@ namespace Dune
       int maxIter_;
       bool verbose_ ;
       mutable int iterations_ = 0;
-      ParameterReader parameter_;
+      SolverParameter parameter_;
       std::string solverName_;
     };
 
