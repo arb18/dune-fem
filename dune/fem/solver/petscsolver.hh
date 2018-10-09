@@ -75,7 +75,7 @@ namespace Dune
        *
        *  \param[in] op Mapping describing operator to invert
        *  \param[in] reduction reduction epsilon
-       *  \param[in] absLimit absolut limit of residual (not used here)
+       *  \param[in] absLimit absolute limit of residual (not used here)
        *  \param[in] maxIter maximal iteration steps
        *  \param[in] verbose verbosity
        *
@@ -96,7 +96,7 @@ namespace Dune
        *
        *  \param[in] op        mapping describing operator to invert
        *  \param[in] reduction    reduction epsilon
-       *  \param[in] absLimit  absolut limit of residual (not used here)
+       *  \param[in] absLimit  absolute limit of residual (not used here)
        *  \param[in] maxIter   maximal iteration steps
        */
       PetscInverseOperator ( const OperatorType &op,
@@ -122,7 +122,7 @@ namespace Dune
        *
        *  \param[in] op Mapping describing operator to invert
        *  \param[in] reduction reduction epsilon
-       *  \param[in] absLimit absolut limit of residual (not used here)
+       *  \param[in] absLimit absolute limit of residual (not used here)
        *  \param[in] maxIter maximal iteration steps
        *  \param[in] verbose verbosity
        *
@@ -141,7 +141,7 @@ namespace Dune
        *
        *  \param[in] op        mapping describing operator to invert
        *  \param[in] reduction    reduction epsilon
-       *  \param[in] absLimit  absolut limit of residual (not used here)
+       *  \param[in] absLimit  absolute limit of residual (not used here)
        *  \param[in] maxIter   maximal iteration steps
        */
       PetscInverseOperator ( double reduction, double absLimit, int maxIter,
@@ -286,7 +286,7 @@ namespace Dune
           };
 
         const std::string pcNames[] = { "default", "none", "asm", "sor", "jacobi", "hypre", "ml", "ilu", "icc", "lu" };
-        PetscPrec pcType = static_cast< PetscPrec >( reader.getEnum("petsc.preconditioning.method", pcNames, 0 ) );
+        PetscPrec pcType = static_cast< PetscPrec >( reader.getEnum("petsc.preconditioning.method", pcNames, int(PetscPrec::defaults) ) );
 
         // setup preconditioning context
         PC pc;
