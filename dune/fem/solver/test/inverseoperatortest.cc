@@ -35,7 +35,7 @@
 #if HAVE_PETSC
 #include <dune/fem/function/petscdiscretefunction.hh>
 #include <dune/fem/operator/linear/petscoperator.hh>
-#include <dune/fem/solver/petscsolver.hh>
+#include <dune/fem/solver/petscinverseoperators.hh>
 #endif // HAVE_PETSC
 
 #if HAVE_EIGEN
