@@ -349,7 +349,8 @@ namespace Dune
       // specialization for temporary local matrix, then copy of values is not needed
       template <class Operation>
       const PetscScalar* getValues( const unsigned int rSize, const unsigned int cSize,
-                                    const TemporaryLocalMatrixType &localMat, const Operation& )
+                                    const TemporaryLocalMatrixType &localMat, const Operation&,
+                                    const std::integral_constant< bool, false> nonscaled )
       {
         return localMat.data();
       }
@@ -357,15 +358,17 @@ namespace Dune
       // specialization for temporary local matrix, then copy of values is not needed
       template <class LM, class Operation>
       const PetscScalar* getValues( const unsigned int rSize, const unsigned int cSize,
-                                    const Assembly::Impl::LocalMatrixGetter< LM >& localMat, const Operation& )
+                                    const Assembly::Impl::LocalMatrixGetter< LM >& localMat, const Operation&,
+                                    const std::integral_constant< bool, false> nonscaled )
       {
         return localMat.localMatrix().data();
       }
 
       // retrieve values for arbitrary local matrix
-      template <class LocalMatrix, class Operation>
+      template <class LocalMatrix, class Operation, bool T>
       const PetscScalar* getValues( const unsigned int rSize, const unsigned int cSize,
-                                    const LocalMatrix &localMat, const Operation& operation )
+                                    const LocalMatrix &localMat, const Operation& operation,
+                                    const std::integral_constant< bool, T> scaled )
       {
         std::vector< PetscScalar >& v = v_;
         v.resize( rSize * cSize );
@@ -379,10 +382,11 @@ namespace Dune
         return v.data();
       }
 
-      template< class LocalMatrix, class Operation, class PetscOp >
+      template< class LocalMatrix, class Operation, class PetscOp, bool T >
       void applyLocalMatrix ( const DomainEntityType &domainEntity, const RangeEntityType &rangeEntity,
                               const LocalMatrix &localMat, const Operation& operation,
-                              PetscOp petscOp )
+                              PetscOp petscOp,
+                              const std::integral_constant<bool, T> scaled )
       {
         std::vector< PetscInt >& r = r_;
         std::vector< PetscInt >& c = c_;
@@ -396,7 +400,7 @@ namespace Dune
           const unsigned int rSize = r.size() * domainLocalBlockSize ;
           const unsigned int cSize = c.size() * domainLocalBlockSize ;
 
-          const PetscScalar* values = getValues( rSize, cSize, localMat, operation );
+          const PetscScalar* values = getValues( rSize, cSize, localMat, operation, scaled );
           ::Dune::Petsc::MatSetValuesBlocked( petscMatrix_, r.size(), r.data(), c.size(), c.data(), values, petscOp );
         }
         else
@@ -407,7 +411,7 @@ namespace Dune
           const unsigned int rSize = r.size();
           const unsigned int cSize = c.size();
 
-          const PetscScalar* values = getValues( rSize, cSize, localMat, operation );
+          const PetscScalar* values = getValues( rSize, cSize, localMat, operation, scaled );
           ::Dune::Petsc::MatSetValues( petscMatrix_, rSize, r.data(), cSize, c.data(), values, petscOp );
         }
         setStatus( statAssembled );
@@ -422,7 +426,7 @@ namespace Dune
 
         auto operation = [] ( const PetscScalar& value ) -> PetscScalar { return value; };
 
-        applyLocalMatrix( domainEntity, rangeEntity, localMat, operation, ADD_VALUES );
+        applyLocalMatrix( domainEntity, rangeEntity, localMat, operation, ADD_VALUES, std::integral_constant< bool, false>() );
       }
 
       template< class LocalMatrix, class Scalar >
@@ -433,7 +437,7 @@ namespace Dune
 
         auto operation = [ &s ] ( const PetscScalar& value ) -> PetscScalar { return s * value; };
 
-        applyLocalMatrix( domainEntity, rangeEntity, localMat, operation, ADD_VALUES );
+        applyLocalMatrix( domainEntity, rangeEntity, localMat, operation, ADD_VALUES, std::integral_constant< bool, true>() );
       }
 
       template< class LocalMatrix >
@@ -444,7 +448,7 @@ namespace Dune
 
         auto operation = [] ( const PetscScalar& value ) -> PetscScalar { return value; };
 
-        applyLocalMatrix( domainEntity, rangeEntity, localMat, operation, INSERT_VALUES );
+        applyLocalMatrix( domainEntity, rangeEntity, localMat, operation, INSERT_VALUES, std::integral_constant< bool, false>() );
       }
 
 
