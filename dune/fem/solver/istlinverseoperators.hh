@@ -12,6 +12,7 @@
 #include <dune/common/version.hh>
 
 #include <dune/fem/operator/linear/istladapter.hh>
+#include <dune/fem/operator/linear/istloperator.hh>
 
 #include <dune/istl/scalarproducts.hh>
 #include <dune/istl/solvers.hh>
