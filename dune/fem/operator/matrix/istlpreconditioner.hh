@@ -88,7 +88,7 @@ namespace Dune
         return tmp.str();
       }
 
-     private:
+    protected:
       std::string keyPrefix_;
       ParameterReader parameter_;
     };

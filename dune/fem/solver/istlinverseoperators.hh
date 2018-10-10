@@ -133,7 +133,8 @@ namespace Dune
           method_( method < 0 ? parameter.krylovMethod() : method ),
           restart_( method_ == SolverParameter::gmres ? parameter.gmresRestart() : 0 ),
           maxIterations_( maxIterations ),
-          verbose_( verbose )
+          verbose_( verbose ),
+          parameter_( parameter )
       {
       }
 
@@ -196,6 +197,8 @@ namespace Dune
 
       void setMaxIterations( unsigned int maxIterations ) { maxIterations_ = maxIterations; }
 
+      const SolverParameter& parameter () const { return parameter_; }
+
     protected:
       template< class ImprovedMatrix >
       void callSuperLU ( ISTLParallelMatrixAdapterInterface< ImprovedMatrix >& op,
@@ -224,6 +227,8 @@ namespace Dune
       const unsigned int restart_;
       unsigned int maxIterations_;
       const int verbose_;
+
+      SolverParameter parameter_;
     };
 
 
@@ -368,7 +373,8 @@ namespace Dune
 
         if( matrixOp_ )
         {
-          auto& matrix = matrixOp_->matrixAdapter();
+          ISTLMatrixParameter matparm( solverAdapter_.parameter().parameter() );
+          auto& matrix = matrixOp_->matrixAdapter( matparm );
           // if preconditioner_ was set use that one, otherwise the one from the matrix object
           typedef Dune::Preconditioner< BlockVectorType, BlockVectorType > PreconditionerType;
           PreconditionerType& matrixPre = matrix.preconditionAdapter();

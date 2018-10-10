@@ -17,7 +17,7 @@ namespace Dune
       // key prefix, default is fem.solver (can be overloaded by user)
       const std::string keyPrefix_;
 
-      const ParameterReader &parameter_;
+      ParameterReader parameter_;
 
     public:
       // identifier for Fem and ISTL solvers

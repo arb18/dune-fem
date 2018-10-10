@@ -716,7 +716,7 @@ namespace Dune
         , sequence_(-1)
         , localMatrixStack_( *this )
         , overflowFraction_( param.overflowFraction() )
-        , param_(param)
+        , param_( param )
       {}
 
       ThisType &systemMatrix () { return *this; }
@@ -741,20 +741,26 @@ namespace Dune
         return "";
       }
 
-      void createMatrixAdapter () const
+      void createMatrixAdapter ( const ISTLMatrixParameter& param ) const
       {
         if( !matrixAdap_ )
         {
-          matrixAdap_ = ISTLMatrixAdapterFactory< ThisType > :: matrixAdapter( *this, param_ );
+          matrixAdap_ = ISTLMatrixAdapterFactory< ThisType > :: matrixAdapter( *this, param );
         }
         assert( matrixAdap_ );
       }
 
       //! return matrix adapter object
+      MatrixAdapterType& matrixAdapter( const ISTLMatrixParameter& parameter ) const
+      {
+        createMatrixAdapter( parameter );
+        return *matrixAdap_;
+      }
+
+      //! return matrix adapter object
       MatrixAdapterType& matrixAdapter() const
       {
-        createMatrixAdapter();
-        return *matrixAdap_;
+        return matrixAdapter( param_ );
       }
 
     public:
