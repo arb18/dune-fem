@@ -77,6 +77,8 @@ struct DefaultLumpingQuadratureTraits
   typedef LumpingQuadrature<FieldType, typename Dune::Impl::PyramidTopology<dimension>::type> PyramidQuadratureType;
   typedef SimplexQuadratureType PointQuadratureType;
   typedef SimplexQuadratureType LineQuadratureType;
+
+  typedef int QuadratureKeyType;
 };
 
 template<class GridPartImp, int codim>

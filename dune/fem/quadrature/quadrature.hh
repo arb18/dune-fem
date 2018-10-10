@@ -181,6 +181,9 @@ namespace Dune
     //! type of coordinate
     typedef typename IntegrationPointListType :: CoordinateType CoordinateType;
 
+    //! type of key to identify quadrature on user side (default the order of the quadrature)
+    typedef typename Traits :: QuadratureKeyType  QuadratureKeyType;
+
     typedef QuadraturePointWrapper< ThisType > QuadraturePointWrapperType;
 
     //! to be revised, look at caching quad
@@ -201,8 +204,8 @@ namespace Dune
      *  \param[in]  order         order of the requested quadrature
      */
     inline IntegrationPointList ( const GeometryType &geometryType,
-                                  int order )
-    : ipList_( QuadratureProviderType :: getQuadrature( geometryType, order ) )
+                                  const QuadratureKeyType& quadKey )
+    : ipList_( QuadratureProviderType :: getQuadrature( geometryType, quadKey ) )
     {
     }
 
@@ -220,8 +223,8 @@ namespace Dune
      */
     inline IntegrationPointList ( const GeometryType &geometryType,
                                   const GeometryType &elementGeometry,
-                                  int order )
-    : ipList_( QuadratureProviderType :: getQuadrature( geometryType, elementGeometry, order ) )
+                                  const QuadratureKeyType& quadKey )
+    : ipList_( QuadratureProviderType :: getQuadrature( geometryType, elementGeometry, quadKey ) )
     {
     }
 

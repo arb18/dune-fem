@@ -24,6 +24,8 @@ namespace Dune
     {
       typedef CubeQuadrature< FieldType, dim > CubeQuadratureType;
       typedef QuadratureImp< FieldType, dim > IntegrationPointListType;
+
+      typedef int QuadratureKeyType ;
     };
 
 
@@ -44,6 +46,8 @@ namespace Dune
     {
       typedef CubeQuadrature< FieldType, 1 > LineQuadratureType;
       typedef QuadratureImp< FieldType, 1 > IntegrationPointListType;
+
+      typedef int QuadratureKeyType ;
     };
 
 
@@ -55,6 +59,8 @@ namespace Dune
       typedef CubeQuadrature< FieldType, 2 > CubeQuadratureType;
       typedef SimplexQuadrature< FieldType, 2 > SimplexQuadratureType;
       typedef QuadratureImp< FieldType, 2 > IntegrationPointListType;
+
+      typedef int QuadratureKeyType ;
     };
 
 
@@ -70,6 +76,8 @@ namespace Dune
       typedef PyramidQuadrature< FieldType > PyramidQuadratureType;
 
       typedef QuadratureImp< FieldType, 3 > IntegrationPointListType;
+
+      typedef int QuadratureKeyType ;
     };
 
   } // namespace Fem

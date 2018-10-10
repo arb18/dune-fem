@@ -132,19 +132,22 @@ namespace Dune
       typedef typename QuadratureTraitsType :: IntegrationPointListType
         IntegrationPointListType;
 
+      //! key for access of quadratures in the storage
+      typedef typename QuadratureTraitsType :: QuadratureKeyType  QuadratureKeyType;
+
       //! Access to the quadrature implementations.
       static const IntegrationPointListType &getQuadrature( const GeometryType &geometry,
-                                                            int order )
+                                                            const QuadratureKeyType& quadKey )
       {
         assert( geometry.isCube() );
-        return QuadCreator< 0 > :: template provideQuad< CubeQuadratureType > ( geometry, order );
+        return QuadCreator< 0 > :: template provideQuad< CubeQuadratureType > ( geometry, quadKey );
       }
       //! Access to the quadrature implementations.
       static const IntegrationPointListType &getQuadrature( const GeometryType &geometry,
                                                             const GeometryType &elementGeometry,
-                                                            int order )
+                                                            const QuadratureKeyType& quadKey )
       {
-        return getQuadrature( geometry, order );
+        return getQuadrature( geometry, quadKey );
       }
 
       QuadratureProvider() = delete;
@@ -175,15 +178,17 @@ namespace Dune
       //! type of integration point list implementation
       typedef typename QuadratureTraitsType :: IntegrationPointListType IntegrationPointListType;
 
+      //! key for access of quadratures in the storage
+      typedef typename QuadratureTraitsType :: QuadratureKeyType  QuadratureKeyType;
+
       //! Access to the quadrature implementations.
       static const IntegrationPointListType &getQuadrature( const GeometryType &geometry,
-                                                            int order )
+                                                            const QuadratureKeyType& quadKey )
       {
         assert( geometry.isCube() || geometry.isSimplex() );
-        assert( order >= 0 );
         //return QuadCreator< 0 > :: template provideQuad< PointQuadratureType > ( geometry, order );
         static PointQuadratureType quad( geometry,
-                                         order,
+                                         quadKey,
                                          IdProvider ::instance().newId());
         return quad;
       }
@@ -191,9 +196,9 @@ namespace Dune
       //! Access to the quadrature implementations.
       static const IntegrationPointListType &getQuadrature( const GeometryType &geometry,
                                                             const GeometryType &elementGeometry,
-                                                            int order )
+                                                            const QuadratureKeyType& quadKey )
       {
-        return getQuadrature(geometry, order);
+        return getQuadrature(geometry, quadKey);
       }
 
       QuadratureProvider() = delete;
@@ -224,27 +229,28 @@ namespace Dune
       //! type of integration point list implementation
       typedef typename QuadratureTraitsType :: IntegrationPointListType IntegrationPointListType;
 
+      //! key for access of quadratures in the storage
+      typedef typename QuadratureTraitsType :: QuadratureKeyType  QuadratureKeyType;
+
       //! Access to the quadrature implementations.
       static const IntegrationPointListType &getQuadrature( const GeometryType &geometry,
-                                                            int order )
+                                                            const QuadratureKeyType& quadKey )
       {
         assert( geometry.isCube() || geometry.isSimplex() );
-        assert( order >= 0 );
-        return QuadCreator< 0 > :: template provideQuad< LineQuadratureType > ( geometry, order );
+        return QuadCreator< 0 > :: template provideQuad< LineQuadratureType > ( geometry, quadKey );
       }
 
       //! Access to the quadrature implementations.
       static const IntegrationPointListType &getQuadrature( const GeometryType &geometry,
                                                             const GeometryType &elementGeometry,
-                                                            int order )
+                                                            const QuadratureKeyType& quadKey )
       {
         assert( geometry.isCube() || geometry.isSimplex() );
-        assert( order >= 0 );
         // we need here to distinguish between the basic types
         // otherwise the this won't work for UGGrid
         return ( elementGeometry.isSimplex() ) ?
-          QuadCreator< 0 > :: template provideQuad< LineQuadratureType > ( geometry, order ) :
-          QuadCreator< 1 > :: template provideQuad< LineQuadratureType > ( geometry, order ) ;
+          QuadCreator< 0 > :: template provideQuad< LineQuadratureType > ( geometry, quadKey ) :
+          QuadCreator< 1 > :: template provideQuad< LineQuadratureType > ( geometry, quadKey ) ;
       }
 
       QuadratureProvider() = delete;
@@ -277,22 +283,24 @@ namespace Dune
       //! type of integration point list implementation
       typedef typename QuadratureTraitsType :: IntegrationPointListType IntegrationPointListType;
 
+      //! key for access of quadratures in the storage
+      typedef typename QuadratureTraitsType :: QuadratureKeyType  QuadratureKeyType;
+
       //! Access to the quadrature implementations.
       static const IntegrationPointListType &getQuadrature( const GeometryType &geometry,
-                                                            int order )
+                                                            const QuadratureKeyType& quadKey )
       {
         assert( geometry.isCube() || geometry.isSimplex() || geometry.isNone() );
-        assert( order >= 0 );
 
         if( geometry.isSimplex() )
         {
           return QuadCreator< 0 > ::
-            template provideQuad< SimplexQuadratureType > ( geometry, order );
+            template provideQuad< SimplexQuadratureType > ( geometry, quadKey );
         }
         else if( geometry.isCube() )
         {
           return QuadCreator< 1 > ::
-            template provideQuad< CubeQuadratureType >    ( geometry, order ) ;
+            template provideQuad< CubeQuadratureType >    ( geometry, quadKey ) ;
         }
         else
         {
@@ -304,23 +312,22 @@ namespace Dune
       //! Access to the quadrature implementations.
       static const IntegrationPointListType &getQuadrature( const GeometryType &geometry,
                                                             const GeometryType &elementGeometry,
-                                                            int order )
+                                                            const QuadratureKeyType& quadKey )
       {
         assert( geometry.isCube() || geometry.isSimplex() );
-        assert( order >= 0 );
 
         // if geometry is simplex return simplex quadrature
         if ( geometry.isSimplex() )
         {
           // check element geometry to provide quadratures with different ids
           if( elementGeometry.isSimplex() )
-            return QuadCreator< 0 > :: template provideQuad< SimplexQuadratureType > ( geometry, order ) ;
+            return QuadCreator< 0 > :: template provideQuad< SimplexQuadratureType > ( geometry, quadKey ) ;
           else if( elementGeometry.isCube() )
-            return QuadCreator< 1 > :: template provideQuad< SimplexQuadratureType > ( geometry, order ) ;
+            return QuadCreator< 1 > :: template provideQuad< SimplexQuadratureType > ( geometry, quadKey ) ;
           else if( elementGeometry.isPrism() )
-            return QuadCreator< 2 > :: template provideQuad< SimplexQuadratureType > ( geometry, order ) ;
+            return QuadCreator< 2 > :: template provideQuad< SimplexQuadratureType > ( geometry, quadKey ) ;
           else if( elementGeometry.isPyramid() )
-            return QuadCreator< 3 > :: template provideQuad< SimplexQuadratureType > ( geometry, order ) ;
+            return QuadCreator< 3 > :: template provideQuad< SimplexQuadratureType > ( geometry, quadKey ) ;
           else
             DUNE_THROW( RangeError, "Element type not available for dimension 3" );
         }
@@ -329,13 +336,13 @@ namespace Dune
           // return cube quadrature
           // check element geometry to provide quadratures with different ids
           if( elementGeometry.isSimplex() )
-            return QuadCreator< 4 > :: template provideQuad< CubeQuadratureType > ( geometry, order ) ;
+            return QuadCreator< 4 > :: template provideQuad< CubeQuadratureType > ( geometry, quadKey ) ;
           else if( elementGeometry.isCube() )
-            return QuadCreator< 5 > :: template provideQuad< CubeQuadratureType > ( geometry, order ) ;
+            return QuadCreator< 5 > :: template provideQuad< CubeQuadratureType > ( geometry, quadKey ) ;
           else if( elementGeometry.isPrism() )
-            return QuadCreator< 6 > :: template provideQuad< CubeQuadratureType > ( geometry, order ) ;
+            return QuadCreator< 6 > :: template provideQuad< CubeQuadratureType > ( geometry, quadKey ) ;
           else if( elementGeometry.isPyramid() )
-            return QuadCreator< 7 > :: template provideQuad< CubeQuadratureType > ( geometry, order ) ;
+            return QuadCreator< 7 > :: template provideQuad< CubeQuadratureType > ( geometry, quadKey ) ;
           else
             DUNE_THROW( RangeError, "Element type not available for dimension 3" );
         }
@@ -380,27 +387,29 @@ namespace Dune
       //! type of integration point list implementation
       typedef typename QuadratureTraitsType :: IntegrationPointListType IntegrationPointListType;
 
+      //! key for access of quadratures in the storage
+      typedef typename QuadratureTraitsType :: QuadratureKeyType  QuadratureKeyType;
+
       //! Access to the quadrature implementations.
       static const IntegrationPointListType &getQuadrature( const GeometryType &geometry,
-                                                            int order )
+                                                            const QuadratureKeyType& quadKey )
       {
         assert( geometry.isCube() || geometry.isSimplex() ||  geometry.isNone()
              || geometry.isPrism() || geometry.isPyramid() );
-        assert( order >= 0 );
 
         if( geometry.isSimplex() )
           return QuadCreator< 0 > :: template provideQuad< SimplexQuadratureType >
-            ( geometry, order );
+            ( geometry, quadKey );
         if( geometry.isCube() )
           return QuadCreator< 1 > :: template provideQuad< CubeQuadratureType >
-            ( geometry, order );
+            ( geometry, quadKey );
 
         if( geometry.isPrism() )
           return QuadCreator< 2 > :: template provideQuad< PrismQuadratureType >
-            ( geometry, order );
+            ( geometry, quadKey );
         if( geometry.isPyramid() )
           return QuadCreator< 3 > :: template provideQuad< PyramidQuadratureType >
-            ( geometry, order );
+            ( geometry, quadKey );
 
         if( geometry.isNone() )
         {
@@ -416,7 +425,7 @@ namespace Dune
 
       static const IntegrationPointListType &getQuadrature( const GeometryType &geometry,
                                                             const GeometryType &elementGeometry,
-                                                            int order )
+                                                            const QuadratureKeyType& quadKey )
       {
         DUNE_THROW( RangeError, "QuadProvider::getQuadrature not implemented for 3d face quadratures!" );
         // dummy return
