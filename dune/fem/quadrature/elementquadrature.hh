@@ -198,7 +198,7 @@ namespace Dune
       typedef typename IntegrationTraits :: CoordinateType CoordinateType;
 
       //! type of quadrature identifier on user side (default is the order of quadrature)
-      typedef typename IntegrationTraits :: QuadratureKeyType QuadratureKeyType;
+      typedef typename BaseType :: QuadratureKeyType QuadratureKeyType;
 
       //! type of the quadrature point
       typedef QuadraturePointWrapper< ThisType > QuadraturePointWrapperType;
