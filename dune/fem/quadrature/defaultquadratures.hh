@@ -36,6 +36,7 @@ namespace Dune
     {
       typedef CubeQuadrature< FieldType, 0 > PointQuadratureType;
       typedef QuadratureImp< FieldType, 0 > IntegrationPointListType;
+      typedef int QuadratureKeyType ;
     };
 
 
