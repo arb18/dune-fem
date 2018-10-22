@@ -251,18 +251,18 @@ namespace Dune
 
     protected:
       Base getPointList ( const IntersectionType &intersection,
-                          const int order,
+                          const QuadratureKeyType& key,
                           const typename Base :: Side side )
       {
         switch( side )
         {
           case Base :: INSIDE:
             return Base( TwistUtilityType::elementGeometry( intersection, true ),
-                         intersection.indexInInside(), order );
+                         intersection.indexInInside(), key );
 
           case Base :: OUTSIDE:
             return Base( TwistUtilityType::elementGeometry( intersection, false ),
-                         intersection.indexInOutside(), order );
+                         intersection.indexInOutside(), key );
 
           default:
             DUNE_THROW( InvalidStateException, "ElementIntegrationPointList: side must either be INSIDE or OUTSIDE." );
