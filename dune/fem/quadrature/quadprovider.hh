@@ -102,7 +102,7 @@ namespace Dune
           {
             // make sure we work in single thread mode when quadrature is created
             assert( Fem :: ThreadManager:: singleThreadMode() );
-            quadPtr.reset( new QuadImp( geometry, order, IdProvider :: instance().newId() ) );
+            quadPtr.reset( new QuadImp( geometry, int(order), IdProvider :: instance().newId() ) );
           }
 
           assert( quadPtr );
@@ -114,7 +114,7 @@ namespace Dune
       /*! \brief provide quadrature
        *
        *  \param[in]  geometry  type of geometry, the quadrature is requested for
-       *  \param[in]  order     minimal order of the requested quadrature
+       *  \param[in]  key       key to identify quadrature, i.e. minimal order of the requested quadrature
        */
       template< class QuadImp, class QuadratureKey >
       static const QuadImp &provideQuad( const GeometryType&  geometry,
@@ -122,6 +122,40 @@ namespace Dune
       {
         static QuadratureStorage< QuadImp, QuadratureKey > storage;
         return storage.getQuadrature( geometry, key );
+      }
+
+      /*! \brief provide quadrature
+       *
+       *  \param[in]  geometry  type of geometry, the quadrature is requested for
+       *  \param[in]  key       key to identify quadrature, i.e. minimal order of the requested quadrature
+       *  \param[in]  defaultOrder  to identify polyhedral geometries
+       */
+      template< class QuadImp,  class QuadratureKey >
+      static const QuadImp &provideQuad( const GeometryType&  geometry,
+                                         const QuadratureKey& key,
+                                         const int defaultOrder )
+      {
+        // this function should only be called for geometry types equal to none
+        assert( geometry.isNone() );
+        DUNE_THROW(NotImplemented,"provideQuad for polyhedral cells (defaultOrder = 0) not implemented for arbitrary QuadratureKey!");
+        QuadImp* ptr = nullptr;
+        return *ptr;
+      }
+
+      /*! \brief provide quadrature
+       *
+       *  \param[in]  geometry  type of geometry, the quadrature is requested for
+       *  \param[in]  order     minimal order of the requested quadrature
+       *  \param[in]  defaultOrder  to identify polyhedral geometries
+       */
+      template< class QuadImp >
+      static const QuadImp &provideQuad( const GeometryType&  geometry,
+                                         const int ,
+                                         const int defaultOrder )
+      {
+        assert( geometry.isNone() );
+        static QuadratureStorage< QuadImp, int > storage;
+        return storage.getQuadrature( geometry, defaultOrder );
       }
     };
 
@@ -336,7 +370,7 @@ namespace Dune
         else
         {
           // dummy return for polygonal grid cells, i.e. geometry type none
-          return QuadCreator< 1 > :: template provideQuad< CubeQuadratureType > ( geometry, 0 );
+          return QuadCreator< 1 > :: template provideQuad< CubeQuadratureType > ( geometry, quadKey, 0 );
         }
       }
 
@@ -381,7 +415,7 @@ namespace Dune
         DUNE_THROW( RangeError, "Element type not available for dimension 2" );
         // dummy return
         return QuadCreator< 0 > ::
-          template provideQuad< SimplexQuadratureType >( geometry, 0 );
+          template provideQuad< SimplexQuadratureType >( geometry, quadKey, 0 );
       }
 
       QuadratureProvider() = delete;
@@ -445,13 +479,13 @@ namespace Dune
         if( geometry.isNone() )
         {
           // dummy return for polyhedral grid cells
-          return QuadCreator< 1 > :: template provideQuad< CubeQuadratureType > ( geometry, 0 );
+          return QuadCreator< 1 > :: template provideQuad< CubeQuadratureType > ( geometry, quadKey, 0 );
         }
 
         DUNE_THROW( RangeError, "Element type not available for dimension 3" );
         // dummy return
         return QuadCreator< 0 > :: template provideQuad< SimplexQuadratureType >
-          ( geometry, 0 );
+          ( geometry, quadKey, 0 );
       }
 
       static const IntegrationPointListType &getQuadrature( const GeometryType &geometry,
@@ -461,7 +495,7 @@ namespace Dune
         DUNE_THROW( RangeError, "QuadProvider::getQuadrature not implemented for 3d face quadratures!" );
         // dummy return
         return QuadCreator< 0 > :: template provideQuad< SimplexQuadratureType >
-          ( geometry, 0 );
+          ( geometry, quadKey, 0 );
       }
 
       QuadratureProvider() = delete;
