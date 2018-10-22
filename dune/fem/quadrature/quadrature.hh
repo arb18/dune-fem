@@ -390,6 +390,9 @@ namespace Dune
     //! type of local coordinate vectors
     typedef typename IntegrationPointListType :: CoordinateType CoordinateType;
 
+    //! type of key to identify the quadrature
+    typedef typename Traits :: QuadratureKeyType  QuadratureKeyType;
+
     //! to be revised, look at caching quad
     enum { codimension = 0 };
 
@@ -402,10 +405,10 @@ namespace Dune
      *  \note The order of the quadrature may be higher than the requested one.
      *
      *  \param[in]  geometryType  geometry type of the requested quadrature
-     *  \param[in]  order         order of the requested quadrature
+     *  \param[in]  key           key to identify the quadrature (default = order)
      */
-    inline Quadrature( const GeometryType &geometryType, int order )
-    : BaseType( geometryType, order )
+    inline Quadrature( const GeometryType &geometryType, const QuadratureKeyType &key )
+    : BaseType( geometryType, key )
     {
     }
 
@@ -419,15 +422,15 @@ namespace Dune
      *  \param[in]  geometryType     geometry type of the requested quadrature
      *  \param[in]  elementGeometry  geometry type of element that resulting
      *              quadrature is used for (in case of face quadratures)
-     *  \param[in]  order            order of the requested quadrature
+     *  \param[in]  key              key to identify the quadrature (default = order)
      *
      *  \note This is a specialized constructor for constructing
      *  face quadratures for UGGrid.
      */
     inline Quadrature ( const GeometryType &geometryType,
                         const GeometryType &elementGeometry,
-                        int order )
-    : BaseType( geometryType, elementGeometry, order )
+                        const QuadratureKeyType &key )
+    : BaseType( geometryType, elementGeometry, key )
     {
     }
 
