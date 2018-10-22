@@ -2,6 +2,8 @@
 #define DUNE_FEM_QUADPROVIDER_HH
 
 #include <iostream>
+#include <memory>
+#include <map>
 #include <vector>
 
 #include <dune/fem/quadrature/quadratureimp.hh>
@@ -27,27 +29,55 @@ namespace Dune
     class QuadCreator
     {
     private:
-      //! class holding vector with pointer to quadrature objects
-      template< class QuadImp >
+      //! class holding map with pointer to quadrature objects
+      template< class QuadImp, class QuadratureKey >
       class QuadratureStorage
       {
       public:
         typedef QuadImp QuadType;
 
-        typedef QuadType *QuadPtr;
+      protected:
+        typedef std :: map< QuadratureKey, std::unique_ptr< QuadType > >  StorageType;
+        StorageType storage_;
+
+      public:
+        QuadratureStorage () {}
+
+        QuadImp &getQuadrature( const GeometryType &geometry, const QuadratureKey& key )
+        {
+          QuadType* quadPtr = nullptr;
+          auto it = storage_.find( key );
+          if( it == storage_.end() )
+          {
+            // make sure we work in single thread mode when quadrature is created
+            assert( Fem :: ThreadManager:: singleThreadMode() );
+            quadPtr = new QuadImp( geometry, key, IdProvider :: instance().newId() );
+            storage_[ key ].reset( quadPtr );
+          }
+          else
+          {
+            quadPtr = it->second.operator ->();
+          }
+
+          assert( quadPtr != nullptr );
+          return *quadPtr;
+        }
+      }; // end class QuadratureStorage
+
+      //! class holding vector with pointer to quadrature objects
+      template< class QuadImp>
+      class QuadratureStorage< QuadImp, int > // QuadratureKey == int
+      {
+      public:
+        typedef QuadImp QuadType;
 
       protected:
-        std :: vector< QuadPtr > storage_;
+        std::vector< std::unique_ptr< QuadType > > storage_;
 
       public:
         QuadratureStorage ()
-        : storage_( QuadType :: maxOrder() + 1, nullptr )
-        {}
-
-        ~QuadratureStorage ()
+          : storage_( QuadType :: maxOrder() + 1 )
         {
-          for( auto& elem : storage_ )
-            delete elem;
         }
 
         QuadImp &getQuadrature( const GeometryType &geometry, unsigned int order )
@@ -64,17 +94,18 @@ namespace Dune
               showMessage = false;
             }
 #endif
-            order = storage_.size() -1;
+            order = storage_.size() - 1;
           }
 
-          QuadPtr& quadPtr = storage_[ order ];
-          if( quadPtr == nullptr )
+          auto& quadPtr = storage_[ order ];
+          if( ! quadPtr )
           {
             // make sure we work in single thread mode when quadrature is created
             assert( Fem :: ThreadManager:: singleThreadMode() );
-            quadPtr = new QuadImp( geometry, order, IdProvider :: instance().newId() );
+            quadPtr.reset( new QuadImp( geometry, order, IdProvider :: instance().newId() ) );
           }
-          assert( quadPtr != nullptr );
+
+          assert( quadPtr );
           return *quadPtr;
         }
       }; // end class QuadratureStorage
@@ -85,12 +116,12 @@ namespace Dune
        *  \param[in]  geometry  type of geometry, the quadrature is requested for
        *  \param[in]  order     minimal order of the requested quadrature
        */
-      template< class QuadImp >
-      static const QuadImp &provideQuad( const GeometryType &geometry,
-                                         unsigned int order )
+      template< class QuadImp, class QuadratureKey >
+      static const QuadImp &provideQuad( const GeometryType&  geometry,
+                                         const QuadratureKey& key )
       {
-        static QuadratureStorage< QuadImp > storage;
-        return storage.getQuadrature( geometry, order );
+        static QuadratureStorage< QuadImp, QuadratureKey > storage;
+        return storage.getQuadrature( geometry, key );
       }
     };
 
