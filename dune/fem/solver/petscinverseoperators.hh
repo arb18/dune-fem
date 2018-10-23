@@ -154,6 +154,12 @@ namespace Dune
       : PetscInverseOperator( reduction, absLimit, std::numeric_limits< int >::max(), parameter.verbose(), parameter )
       {}
 
+      PetscInverseOperator ( double redEps, double absLimit,
+                             unsigned int maxIterations, bool verbose,
+                             const ParameterReader& parameter )
+        : PetscInverseOperator( redEps, absLimit, maxIterations, verbose,
+            SolverParameter( parameter ) ) {}
+
       void bind ( const OperatorType &op )
       {
         op_ = &op;
