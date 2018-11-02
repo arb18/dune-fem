@@ -18,13 +18,12 @@ set(AMGX_VALID_COMPONENTS
     CXX)
 
 SET(CUDA_DIR "$ENV{CUDA_DIR}" CACHE PATH "The path to CUDA.")
-find_package(CUDA REQUIRED)
+find_package(CUDA)
 
 if(${CUDA_FOUND})
     SET(CUDA_LIBRARIES ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusparse_LIBRARY} ${CUDA_cusolver_LIBRARY})
     #MESSAGE("-- Finding CUDA - Success")
     message("Cuda = ${CUDA_LIBRARY_DIRS} ${CUDA_LIBRARIES}")
-endif()
 
 # search AMGX header
 find_path(AMGX_INCLUDE_DIR amgx_c.h amgx_capi.h
@@ -71,4 +70,7 @@ set(HAVE_AMGXSOLVER ${AMGXSOLVER_FOUND})
 if(AMGXSOLVER_FOUND)
   dune_register_package_flags(LIBRARIES "${AMGXSOLVER_LIBRARIES}"
                               INCLUDE_DIRS "${AMGXSOLVER_INCLUDE_DIRS}")
+endif()
+
+# endif CUDA_FOUND
 endif()
