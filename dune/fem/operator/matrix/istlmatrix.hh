@@ -776,6 +776,11 @@ namespace Dune
           return false;
       }
 
+      void flushAssembly()
+      {
+        // nothing to do here
+      }
+
       // compress matrix if not already done before and only in implicit build mode
       void communicate( )
       {

@@ -115,6 +115,8 @@ if(EIGEN3_FOUND)
   include_directories(${EIGEN3_INCLUDE_DIRS})
 endif()
 
+find_package(ViennaCL)
+
 ####### abbreviations
 include(FemShort)
 

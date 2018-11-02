@@ -44,9 +44,20 @@ namespace Dune
     {
       typedef MatrixParameter BaseType;
 
+      std::string keyPrefix_;
+
       PetscMatrixParameter( const std::string keyPrefix = "petscmatrix." )
-        : BaseType( keyPrefix )
+        : BaseType( keyPrefix ),
+          keyPrefix_( keyPrefix )
       {}
+
+      bool viennaCL () const {
+        return Dune::Fem::Parameter::getValue< bool > ( keyPrefix_ + "viennacl", false );
+      }
+
+      bool blockedMode () const {
+        return Dune::Fem::Parameter::getValue< bool > ( keyPrefix_ + "blockedmode", false );
+      }
 
     };
 
@@ -120,7 +131,9 @@ namespace Dune
         : domainMappers_( domainSpace ),
           rangeMappers_( rangeSpace ),
           localMatrixStack_( *this ),
-          status_(statNothing)
+          status_(statNothing),
+          viennaCL_( param.viennaCL() ),
+          blockedMode_( blockedMatrix && (!viennaCL_) && param.blockedMode() )
       {}
 
       PetscLinearOperator ( const std::string &, const DomainSpaceType &domainSpace, const RangeSpaceType &rangeSpace,
@@ -134,11 +147,18 @@ namespace Dune
         destroy();
       }
 
+      void flushAssembly()
+      {
+        ::Dune::Petsc::MatAssemblyBegin( petscMatrix_, MAT_FLUSH_ASSEMBLY );
+        ::Dune::Petsc::MatAssemblyEnd  ( petscMatrix_, MAT_FLUSH_ASSEMBLY );
+        status_ = statAssembled;
+      }
+
       void communicate ()
       {
         ::Dune::Petsc::MatAssemblyBegin( petscMatrix_, MAT_FINAL_ASSEMBLY );
         ::Dune::Petsc::MatAssemblyEnd  ( petscMatrix_, MAT_FINAL_ASSEMBLY );
-         status_ = statAssembled;
+        status_ = statAssembled;
       }
 
       const DomainSpaceType &domainSpace () const { return domainMappers_.space(); }
@@ -202,7 +222,11 @@ namespace Dune
           ::Dune::Petsc::MatCreate( &petscMatrix_ );
 
           PetscInt bs = 1;
-          if( blockedMatrix )
+          if( viennaCL_ )
+          {
+            ::Dune::Petsc::MatSetType( petscMatrix_, MATAIJVIENNACL );
+          }
+          else if( blockedMatrix )
           {
             bs = domainLocalBlockSize ;
             ::Dune::Petsc::MatSetType( petscMatrix_, MATBAIJ );
@@ -253,6 +277,8 @@ namespace Dune
           }
           sequence_ = domainSpace().sequence();
         }
+
+        flushAssembly();
 
         status_ = statAssembled;
       }
@@ -305,7 +331,23 @@ namespace Dune
       template< class PetscOp >
       void applyToBlock ( const PetscInt row, const PetscInt col, const MatrixBlockType& block, PetscOp op )
       {
-        ::Dune::Petsc::MatSetValuesBlocked( petscMatrix_, 1, &row, 1, &col, block.data(), op );
+        if( blockedMode_ )
+        {
+          ::Dune::Petsc::MatSetValuesBlocked( petscMatrix_, 1, &row, 1, &col, block.data(), op );
+        }
+        else
+        {
+          std::array< PetscInt, domainLocalBlockSize > rows;
+          std::array< PetscInt, domainLocalBlockSize > cols;
+          for( unsigned int i=0, r = row * domainLocalBlockSize, c = col * domainLocalBlockSize; i<domainLocalBlockSize; ++i, ++r, ++c )
+          {
+            rows[ i ] = r;
+            cols[ i ] = c;
+          }
+
+          // set given row to a zero row with diagonal entry equal to diag
+          ::Dune::Petsc::MatSetValues( petscMatrix_, domainLocalBlockSize, rows.data(), domainLocalBlockSize, cols.data(), block.data(), op );
+        }
         setStatus( statAssembled );
       }
 
@@ -543,6 +585,9 @@ namespace Dune
 
       mutable LocalMatrixStackType localMatrixStack_;
       mutable Status status_;
+
+      const bool viennaCL_;
+      const bool blockedMode_;
 
       mutable std::unique_ptr< PetscDomainFunctionType > petscArg_;
       mutable std::unique_ptr< PetscRangeFunctionType  > petscDest_;
